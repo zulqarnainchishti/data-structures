@@ -17,9 +17,11 @@ data-structures/
 │   │   ├── circular-doubly-linked-list/
 ├── non-linear/
 │   ├── hierarchical/
-│   │   ├── tree/
+│   │   ├── binary-search-tree/
+│   │   ├── avl-tree/
+│   │   ├── red-black-tree/
 │   │   ├── trie/
-│   │   ├── heap/
+│   │   ├── binary-heap/
 │   │   ├── priority-queue/
 │   ├── unordered/
 │   │   ├── graph/
