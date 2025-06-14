@@ -4,17 +4,17 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void swap(int *a, int *b){
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
 typedef struct{
     int *array;
     int length;
     int size;
 }List;
+
+void swap(int *a, int *b){
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
 
 List init(int N){
     List result;
@@ -50,14 +50,6 @@ bool isEmpty(List list){
 
 bool isFull(List list){
     return list.length==list.size;
-}
-
-bool isIn(List list, int value){
-    for (int i = 0; i < list.length; i++)
-    {
-        if(list.array[i]==value) return true;
-    }
-    return false;
 }
 
 void traverse(List list){
@@ -306,10 +298,10 @@ void heapify(List *list, int size, int index){
 }
 
 void heapSort(List *list){
-    for (int i=list->size/2-1; i>=0; i--){
+    for (int i=list->length/2-1; i>=0; i--){
         heapify(list,list->length,i);
     }
-    for (int i=list->size-1; i>0; i--){
+    for (int i=list->length-1; i>0; i--){
         swap(list->array,list->array+i);
         heapify(list,i,0);
     }
@@ -533,6 +525,14 @@ int count(List list, int value){
     return freq;
 }
 
+bool contains(List list, int value){
+    for (int i = 0; i < list.length; i++)
+    {
+        if(list.array[i]==value) return true;
+    }
+    return false;
+}
+
 int main()
 {
     List veq1=init(10);
@@ -546,7 +546,7 @@ int main()
     append(&veq1,6);
     append(&veq1,8);
     traverse(veq1);
-    countSort(&veq1);
+    heapSort(&veq1);
     traverse(veq1);
     return 0;
 }
