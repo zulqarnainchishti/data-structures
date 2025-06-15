@@ -2,30 +2,30 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+typedef struct{
+    int *array;
+    int front;
+    int rear;
+    int size;
+}DoubleEndedQueue;
+
 void swap(int *a, int *b){
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-typedef struct{
-    int size;
-    int *array;
-    int front;
-    int rear;
-}Deque;
-
-Deque init(int n){
-    Deque queue;
-    queue.size=n;
+DoubleEndedQueue init(int n){
+    DoubleEndedQueue queue;
     queue.array=(int *)malloc(n*sizeof(int));
     queue.front=0;
     queue.rear=0;
+    queue.size=n;
     return queue; 
 }
 
-Deque copy(Deque queue){
-    Deque result=init(queue.size);
+DoubleEndedQueue copy(DoubleEndedQueue queue){
+    DoubleEndedQueue result=init(queue.size);
     for (int i = queue.front; i < queue.rear; i++)
     {
         result.array[result.rear++]=queue.array[i];
@@ -33,84 +33,84 @@ Deque copy(Deque queue){
     return result;
 }
 
-void clear(Deque *queue){
+void clear(DoubleEndedQueue *queue){
     queue->front=0;
     queue->rear=0;
 }
 
-void delete(Deque *vector){
-    vector->size=0;
+void delete(DoubleEndedQueue *vector){
     free(vector->array);
     vector->array=NULL;
     vector->front=0;
     vector->rear=0;
+    vector->size=0;
 }
 
-bool isEmpty(Deque queue){
+bool isEmpty(DoubleEndedQueue queue){
     return queue.front==queue.rear;
 }
 
-bool isFrontFull(Deque queue){
+bool isFrontFull(DoubleEndedQueue queue){
     return queue.front==0;
 }
 
-bool isRearFull(Deque queue){
+bool isRearFull(DoubleEndedQueue queue){
     return queue.rear==queue.size;
 }
 
-int length(Deque queue){
+int length(DoubleEndedQueue queue){
     return queue.rear-queue.front;
 }
 
-void enqueueFront(Deque *queue, int value){
+void enqueueFront(DoubleEndedQueue *queue, int value){
     if(isFrontFull(*queue)){
-        printf("Deque Overflow\n");
+        printf("DoubleEndedQueue Overflow\n");
         return;
     }
     queue->array[--queue->front]=value;
 }
 
-int peekFront(Deque queue){
+int peekFront(DoubleEndedQueue queue){
     if(isEmpty(queue)){
-        printf("Deque Underflow\n");
+        printf("DoubleEndedQueue Underflow\n");
         return -1;
     }
     return queue.array[queue.front];
 }
 
-int dequeueFront(Deque *queue){
+int dequeueFront(DoubleEndedQueue *queue){
     if(isEmpty(*queue)){
-        printf("Deque Underflow\n");
+        printf("DoubleEndedQueue Underflow\n");
         return -1;
     }
     return queue->array[queue->front++];
 }
 
-void enqueueRear(Deque *queue, int value){
+void enqueueRear(DoubleEndedQueue *queue, int value){
     if(isRearFull(*queue)){
-        printf("Deque Overflow\n");
+        printf("DoubleEndedQueue Overflow\n");
         return;
     }
     queue->array[queue->rear++]=value;
 }
 
-int peekRear(Deque queue){
+int peekRear(DoubleEndedQueue queue){
     if(isEmpty(queue)){
-        printf("Deque Underflow\n");
+        printf("DoubleEndedQueue Underflow\n");
         return -1;
     }
     return queue.array[queue.rear-1];
 }
 
-int dequeueRear(Deque *queue){
+int dequeueRear(DoubleEndedQueue *queue){
     if(isEmpty(*queue)){
-        printf("Deque Underflow\n");
+        printf("DoubleEndedQueue Underflow\n");
         return -1;
     }
     return queue->array[--queue->rear];
 }
 
-void traverse(Deque queue){
+void traverse(DoubleEndedQueue queue){
     printf("[");
     for (int i = queue.front; i < queue.rear; i++)
     {
@@ -121,7 +121,7 @@ void traverse(Deque queue){
 
 int main()
 {
-    Deque qyu1=init(5);
+    DoubleEndedQueue qyu1=init(5);
     enqueueRear(&qyu1,11);   
     enqueueRear(&qyu1,22);
     enqueueRear(&qyu1,33);
