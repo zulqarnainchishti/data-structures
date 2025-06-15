@@ -2,25 +2,25 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+typedef struct{
+    int *array;
+    int front;
+    int rear;
+    int size;
+}Queue;
+
 void swap(int *a, int *b){
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-typedef struct{
-    int size;
-    int *array;
-    int front;
-    int rear;
-}Queue;
-
 Queue init(int n){
     Queue queue;
-    queue.size=n;
     queue.array=(int *)malloc(n*sizeof(int));
     queue.front=0;
     queue.rear=0;
+    queue.size=n;
     return queue; 
 }
 
@@ -39,11 +39,11 @@ void clear(Queue *queue){
 }
 
 void delete(Queue *vector){
-    vector->size=0;
     free(vector->array);
     vector->array=NULL;
     vector->front=0;
     vector->rear=0;
+    vector->size=0;
 }
 
 bool isEmpty(Queue queue){
