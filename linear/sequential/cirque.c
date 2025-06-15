@@ -2,30 +2,30 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+typedef struct{
+    int *array;
+    int front;
+    int rear;
+    int size;
+}CircularQueue;
+
 void swap(int *a, int *b){
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-typedef struct{
-    int size;
-    int *array;
-    int front;
-    int rear;
-}Cirque;
-
-Cirque init(int n){
-    Cirque queue;
-    queue.size=n+1;
+CircularQueue init(int n){
+    CircularQueue queue;
     queue.array=(int *)malloc((n+1)*sizeof(int));
     queue.front=0;
     queue.rear=0;
+    queue.size=n+1;
     return queue; 
 }
 
-Cirque copy(Cirque queue){
-    Cirque result=init(queue.size);
+CircularQueue copy(CircularQueue queue){
+    CircularQueue result=init(queue.size);
     while (queue.front!=queue.rear)
     {
         result.array[result.rear++]=queue.array[queue.front];
@@ -34,52 +34,52 @@ Cirque copy(Cirque queue){
     return result;
 }
 
-void clear(Cirque *queue){
+void clear(CircularQueue *queue){
     queue->front=0;
     queue->rear=0;
 }
 
-void delete(Cirque *vector){
-    vector->size=0;
-    free(vector->array);
-    vector->array=NULL;
-    vector->front=0;
-    vector->rear=0;
+void delete(CircularQueue *queue){
+    free(queue->array);
+    queue->array=NULL;
+    queue->front=0;
+    queue->rear=0;
+    queue->size=0;
 }
 
-bool isEmpty(Cirque queue){
+bool isEmpty(CircularQueue queue){
     return queue.front==queue.rear;
 }
 
-bool isFull(Cirque queue){
+bool isFull(CircularQueue queue){
     return (queue.rear+1)%queue.size==queue.front;
 }
 
-int length(Cirque queue){
+int length(CircularQueue queue){
     if(queue.rear<queue.front) queue.rear+=queue.size;
     return queue.rear-queue.front;
 }
 
-void enqueue(Cirque *queue, int value){
+void enqueue(CircularQueue *queue, int value){
     if(isFull(*queue)){
-        printf("Cirque Overflow\n");
+        printf("CircularQueue Overflow\n");
         return;
     }
     queue->array[queue->rear]=value;
     queue->rear=(queue->rear+1)%queue->size;
 }
 
-int peek(Cirque queue){
+int peek(CircularQueue queue){
     if(isEmpty(queue)){
-        printf("Cirque Underflow\n");
+        printf("CircularQueue Underflow\n");
         return -1;
     }
     return queue.array[queue.front];
 }
 
-int dequeue(Cirque *queue){
+int dequeue(CircularQueue *queue){
     if(isEmpty(*queue)==1){
-        printf("Cirque underflow\n");
+        printf("CircularQueue underflow\n");
         return -1;
     }
     int value=queue->array[queue->front];
@@ -87,7 +87,7 @@ int dequeue(Cirque *queue){
     return value;
 }
 
-void traverse(Cirque queue){
+void traverse(CircularQueue queue){
     int len=length(queue);
     printf("[");
     while (queue.front!=queue.rear)
@@ -95,12 +95,12 @@ void traverse(Cirque queue){
         printf(" %d",queue.array[queue.front]);
         queue.front=(queue.front+1)%queue.size;
     }
-    printf(" ] %d/%d\n",len,queue.size-1);
+    printf(" ] : %d/%d\n",len,queue.size-1);
 }
 
 void main()
 {
-    Cirque qyu1=init(5);
+    CircularQueue qyu1=init(5);
     enqueue(&qyu1,11);   
     enqueue(&qyu1,22);
     enqueue(&qyu1,33);
