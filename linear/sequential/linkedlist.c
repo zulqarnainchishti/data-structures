@@ -2,219 +2,259 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void swap(int *a, int *b){
+typedef struct Node
+{
+    int data;
+    struct Node *next;
+} Node;
+
+typedef struct LinkedList
+{
+    struct Node *head;
+    int length;
+} LinkedList;
+
+void swap(int *a, int *b)
+{
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-typedef struct Node{
-    int data;
-    struct Node *next;
-}Node;
-
-Node *init(int value){
-    Node *node=(Node *)malloc(sizeof(Node));
-    node->data=value;
-    node->next=NULL;
-    return node; 
+Node *create(int value)
+{
+    Node *node = (Node *)malloc(sizeof(Node));
+    node->data = value;
+    node->next = NULL;
+    return node;
 }
 
-int lengthIterative(Node *head){
-    int len=0;
-    while (head!=NULL){
-        len++;
-        head=head->next;
-    }
-    return len;
+LinkedList init()
+{
+    LinkedList list;
+    list.head = NULL;
+    list.length = 0;
+    return list;
 }
 
-int lengthRecursive(Node *head){
-    if(head==NULL) return 0;
-    return 1+lengthRecursive(head->next);
-}
-
-void clearIterative(Node **head){
-    Node *tempPrev=NULL;
-    Node *tempNext=*head;
-    *head=NULL;
-    while(tempNext!=NULL){
-        tempPrev=tempNext;
-        tempNext=tempNext->next;
+void clear(LinkedList *list)
+{
+    Node *tempPrev = NULL;
+    Node *tempNext = list->head;
+    while (tempNext != NULL)
+    {
+        tempPrev = tempNext;
+        tempNext = tempNext->next;
         free(tempPrev);
     }
+    list->head = NULL;
+    list->length = 0;
 }
 
-void clearRecursive(Node **head){
-    if(*head==NULL) return;
-    clearRecursive(&(*head)->next);
-    free(*head);
-    *head=NULL;
+LinkedList copy(LinkedList list)
+{
+    LinkedList new = init();
+    Node *temp;
+    while (list.head != NULL)
+    {
+        if (new.head == NULL)
+        {
+            new.head = create(list.head->data);
+            temp = new.head;
+        }
+        else
+        {
+            temp->next = create(list.head->data);
+            temp = temp->next;
+        }
+        list.head = list.head->next;
+    }
+    return new;
 }
 
-Node *searchIterative(Node *head, int value){
-    while (head!=NULL){
-        if(head->data==value) return head;
-        head=head->next;
+Node *search(LinkedList list, int value)
+{
+    while (list.head != NULL)
+    {
+        if (list.head->data == value)
+            return list.head;
+        list.head = list.head->next;
     }
     return NULL;
 }
 
-Node *searchRecursive(Node *head, int value){
-    if(head==NULL || head->data==value) return head;
-    return searchRecursive(head->next,value);
-}
-
-void traverseIterative(Node *head){
-    while (head!=NULL){
-        printf("[%d] ",head->data);
-        head=head->next;
-        printf((head!=NULL)?"-> ":"\n");
-    }
-}
-
-void traverseRecursive(Node *head){
-    if(head==NULL) return;
-    printf("[%d] ",head->data);
-    head=head->next;
-    printf((head!=NULL)?"-> ":"\n");
-    traverseRecursive(head);
-}
-
-Node *reverseIterative(Node *head){
-    Node *tempPrev=NULL;
-    Node *tempCurr=head;
+void reverse(LinkedList *list)
+{
+    Node *tempPrev = NULL;
+    Node *tempCurr = list->head;
     Node *tempNext;
-    while (tempCurr!=NULL)
+    while (tempCurr != NULL)
     {
-        tempNext=tempCurr->next;
-        tempCurr->next=tempPrev;
-        tempPrev=tempCurr;
-        tempCurr=tempNext;
+        tempNext = tempCurr->next;
+        tempCurr->next = tempPrev;
+        tempPrev = tempCurr;
+        tempCurr = tempNext;
     }
-    return tempPrev;
+    list->head = tempPrev;
 }
 
-Node *reverseRecursive(Node *head){
-    if(head==NULL || head->next==NULL) return head;
-    Node *temp=reverseRecursive(head->next);
-    head->next->next=head;
-    head->next=NULL;
-    return temp;
-}
-
-Node *insertAtStart(Node *head, int value){
-    Node *node=init(value);
-    node->next=head;
-    return node;
-}
-
-Node *insertAtEnd(Node *head, int value){
-    Node *node=init(value);
-    if(head==NULL) return node;
-    Node *tempPrev=head;
-    while (tempPrev->next!=NULL) tempPrev=tempPrev->next;
-    tempPrev->next=node;
-    return head;
-}
-
-Node *insertAtIndex(Node *head, int value, int index){
-    if(index<=0) return insertAtStart(head,value);
-    if(index>=lengthIterative(head)) return insertAtEnd(head,value);
-    Node *node=init(value);
-    Node *tempPrev=head;
-    for (int i = 0; i < index-1; i++) tempPrev=tempPrev->next;
-    node->next=tempPrev->next;
-    tempPrev->next=node;
-    return head;
-}
-
-Node *insertAfterValue(Node *head, int new, int old){
-    Node *tempPrev=head;
-    while(tempPrev!=NULL && tempPrev->data!=old) tempPrev=tempPrev->next;
-    if(tempPrev!=NULL){
-        Node *node=init(new);
-        node->next=tempPrev->next;
-        tempPrev->next=node;
+void traverse(LinkedList list)
+{
+    while (list.head != NULL)
+    {
+        printf("[%d]", list.head->data);
+        list.head = list.head->next;
+        printf((list.head != NULL) ? " -> " : "\n");
     }
-    return head;
 }
 
-Node *deleteStart(Node *head){
-    if(head!=NULL){
-        Node *tempCurr=head;
-        head=head->next;
-        free(tempCurr);
+void insertAtStart(LinkedList *list, int value)
+{
+    Node *node = create(value);
+    node->next = list->head;
+    list->head = node;
+    list->length++;
+}
+
+void insertAtEnd(LinkedList *list, int value)
+{
+    Node *node = create(value);
+    if (list->head == NULL)
+    {
+        list->head = node;
+        return;
     }
-    return head;
+    Node *temp = list->head;
+    while (temp->next != NULL)
+        temp = temp->next;
+    temp->next = node;
+    list->length++;
 }
 
-Node *deleteEnd(Node *head){
-    if(head!=NULL){
-        Node *tempPrev=NULL;
-        Node *tempCurr=head;
-        while (tempCurr->next!=NULL)
-        {
-            tempPrev=tempCurr;
-            tempCurr=tempCurr->next;
-        }
-        if(tempPrev==NULL) head=NULL;
-        else tempPrev->next=NULL;
-        free(tempCurr);
+void insertAtIndex(LinkedList *list, int value, int index)
+{
+    if (index <= 0)
+        return insertAtStart(list, value);
+    if (index >= list->length)
+        return insertAtEnd(list, value);
+    Node *node = create(value);
+    Node *temp = list->head;
+    for (int i = 1; i < index; i++)
+        temp = temp->next;
+    node->next = temp->next;
+    temp->next = node;
+    list->length++;
+}
+
+void insertAfterValue(LinkedList *list, int new, int old)
+{
+    Node *temp = search(*list, old);
+    if (temp == NULL)
+        return;
+    Node *node = create(new);
+    node->next = temp->next;
+    temp->next = node;
+    list->length++;
+}
+
+void deleteStart(LinkedList *list)
+{
+    if (list->head == NULL)
+        return;
+    Node *tempCurr = list->head;
+    list->head = list->head->next;
+    free(tempCurr);
+    list->length--;
+}
+
+void deleteEnd(LinkedList *list)
+{
+    if (list->head == NULL)
+        return;
+    Node *tempPrev = NULL;
+    Node *tempCurr = list->head;
+    while (tempCurr->next != NULL)
+    {
+        tempPrev = tempCurr;
+        tempCurr = tempCurr->next;
     }
-    return head;
+    if (tempPrev == NULL)
+        list->head = NULL;
+    else
+        tempPrev->next = NULL;
+    free(tempCurr);
+    list->length--;
 }
 
-Node *deleteIndex(Node *head, int index){
-    if(head!=NULL){
-        if(index<=0) return deleteStart(head);
-        if(index>=lengthIterative(head)-1) return deleteEnd(head);
-        Node *tempPrev=NULL;
-        Node *tempCurr=head;
-        for (int i = 0; i < index; i++)
-        {
-            tempPrev=tempCurr;
-            tempCurr=tempCurr->next;
-        }
-        tempPrev->next=tempCurr->next;
-        free(tempCurr);
+void deleteIndex(LinkedList *list, int index)
+{
+    if (list->head == NULL)
+        return;
+    if (index <= 0)
+        return deleteStart(list);
+    if (index >= list->length - 1)
+        return deleteEnd(list);
+    Node *tempPrev = NULL;
+    Node *tempCurr = list->head;
+    for (int i = 0; i < index; i++)
+    {
+        tempPrev = tempCurr;
+        tempCurr = tempCurr->next;
     }
-    return head;
+    tempPrev->next = tempCurr->next;
+    free(tempCurr);
+    list->length--;
 }
 
-Node *deleteValue(Node *head, int value){
-    if(head!=NULL){
-        Node *tempPrev=NULL;
-        Node *tempCurr=head;
-        while (tempCurr!=NULL && tempCurr->data!=value){
-            tempPrev=tempCurr;
-            tempCurr=tempCurr->next;
-        }
-        if(tempCurr!=NULL){
-            if(tempPrev==NULL) head=head->next;
-            else tempPrev->next=tempCurr->next;
-            free(tempCurr);
-        }
+void deleteValue(LinkedList *list, int value)
+{
+    if (list->head == NULL)
+        return;
+    Node *tempPrev = NULL;
+    Node *tempCurr = list->head;
+    while (tempCurr != NULL && tempCurr->data != value)
+    {
+        tempPrev = tempCurr;
+        tempCurr = tempCurr->next;
     }
-    return head;
+    if (tempCurr == NULL)
+        return;
+    if (tempPrev == NULL)
+        list->head = tempCurr->next;
+    else
+        tempPrev->next = tempCurr->next;
+    free(tempCurr);
+    list->length--;
 }
 
-int main(){
-    Node *head=NULL;
+int main()
+{
+    LinkedList list = init();
 
-    head=insertAtEnd(head,33);
-    head=insertAtEnd(head,44);
-    head=insertAtStart(head,22);
-    head=insertAtStart(head,11);
-    head=insertAtIndex(head,55,0);
-    head=insertAtIndex(head,66,10);
-    head=insertAfterValue(head,77,55);
-    head=insertAfterValue(head,88,22);
-    head=insertAfterValue(head,99,66);
-    traverseIterative(head);
+    insertAtEnd(&list, 33);
+    insertAtEnd(&list, 44);
+    insertAtStart(&list, 22);
+    insertAtStart(&list, 11);
+    insertAtIndex(&list, 55, 0);
+    insertAtIndex(&list, 66, 10);
+    insertAfterValue(&list, 77, 55);
+    insertAfterValue(&list, 88, 22);
+    insertAfterValue(&list, 99, 66);
+    traverse(list);
 
-    head=deleteValue(head,99);
-    traverseIterative(head);
+    deleteValue(&list, 99);
+    traverse(list);
+    deleteStart(&list);
+    traverse(list);
+    deleteEnd(&list);
+    traverse(list);
+    deleteIndex(&list,3);
+    traverse(list);
+    reverse(&list);
+    traverse(list);
+
+    LinkedList new=copy(list);
+    traverse(new);
 
     return 0;
 }
