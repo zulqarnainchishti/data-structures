@@ -54,6 +54,7 @@ void clear(LinkedList *list)
 LinkedList copy(LinkedList list)
 {
     LinkedList new = init();
+    new.length=list.length;
     Node *temp;
     while (list.head != NULL)
     {
@@ -157,20 +158,22 @@ void insertAfterValue(LinkedList *list, int new, int old)
     list->length++;
 }
 
-void deleteStart(LinkedList *list)
+int deleteStart(LinkedList *list)
 {
     if (list->head == NULL)
-        return;
+        return -1;
     Node *tempCurr = list->head;
     list->head = list->head->next;
-    free(tempCurr);
     list->length--;
+    int value = tempCurr->data;
+    free(tempCurr);
+    return value;
 }
 
-void deleteEnd(LinkedList *list)
+int deleteEnd(LinkedList *list)
 {
     if (list->head == NULL)
-        return;
+        return -1;
     Node *tempPrev = NULL;
     Node *tempCurr = list->head;
     while (tempCurr->next != NULL)
@@ -182,14 +185,16 @@ void deleteEnd(LinkedList *list)
         list->head = NULL;
     else
         tempPrev->next = NULL;
+    int value = tempCurr->data;
     free(tempCurr);
     list->length--;
+    return value;
 }
 
-void deleteIndex(LinkedList *list, int index)
+int deleteIndex(LinkedList *list, int index)
 {
     if (list->head == NULL)
-        return;
+        return -1;
     if (index <= 0)
         return deleteStart(list);
     if (index >= list->length - 1)
@@ -202,14 +207,16 @@ void deleteIndex(LinkedList *list, int index)
         tempCurr = tempCurr->next;
     }
     tempPrev->next = tempCurr->next;
+    int value = tempCurr->data;
     free(tempCurr);
     list->length--;
+    return value;
 }
 
-void deleteValue(LinkedList *list, int value)
+int deleteValue(LinkedList *list, int value)
 {
     if (list->head == NULL)
-        return;
+        return -1;
     Node *tempPrev = NULL;
     Node *tempCurr = list->head;
     while (tempCurr != NULL && tempCurr->data != value)
@@ -218,13 +225,14 @@ void deleteValue(LinkedList *list, int value)
         tempCurr = tempCurr->next;
     }
     if (tempCurr == NULL)
-        return;
+        return -1;
     if (tempPrev == NULL)
         list->head = tempCurr->next;
     else
         tempPrev->next = tempCurr->next;
     free(tempCurr);
     list->length--;
+    return value;
 }
 
 int main()

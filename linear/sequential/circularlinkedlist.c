@@ -2,234 +2,334 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void swap(int *a, int *b){
+typedef struct Node
+{
+    int data;
+    struct Node *next;
+} Node;
+
+typedef struct CircularLinkedList
+{
+    struct Node *tail;
+    int length;
+} CircularLinkedList;
+
+void swap(int *a, int *b)
+{
     int temp = *a;
     *a = *b;
     *b = temp;
 }
 
-typedef struct Node{
-    int data;
-    struct Node *next;
-}Node;
-
-Node *init(int value){
-    Node *node=(Node *)malloc(sizeof(Node));
-    node->data=value;
-    node->next=NULL;
-    return node; 
+Node *create(int value)
+{
+    Node *node = (Node *)malloc(sizeof(Node));
+    node->data = value;
+    node->next = NULL;
+    return node;
 }
 
-Node *find(Node *head, int value){
-    Node *temp1=NULL;
-    Node *temp2=head;
-    while (temp2->data!=value)
+CircularLinkedList init()
+{
+    CircularLinkedList list;
+    list.tail = NULL;
+    list.length = 0;
+    return list;
+}
+
+void clear(CircularLinkedList *list)
+{
+    if (list->tail == NULL)
+        return;
+    Node *tempPrev = NULL;
+    Node *tempNext = list->tail->next;
+    list->tail->next = NULL;
+    while (tempNext != NULL)
     {
-        temp2=temp2->next;
-        if(temp2==head) break;
+        tempPrev = tempNext;
+        tempNext = tempNext->next;
+        free(tempPrev);
     }
-    if(temp2->data==value) temp1=temp2;
-    return temp1;
+    list->tail = NULL;
+    list->length = 0;
 }
 
-void clear(Node **head){
-    Node *temp1=NULL;
-    Node *temp2=(*head)->next;
-    (*head)->next=NULL;
-    *head=NULL;
-    while(temp2!=NULL){
-        temp1=temp2;
-        temp2=temp2->next;
-        free(temp1);
-    }
-}
-
-int length(Node *head){
-    int count=0;
-    Node *temp1=head;
-    while (temp1!=NULL)
+CircularLinkedList copy(CircularLinkedList list)
+{
+    CircularLinkedList new = init();
+    if (list.tail == NULL)
+        return new;
+    new.length = list.length;
+    Node *head = list.tail->next, *temp;
+    while (true)
     {
-        count++;
-        temp1=temp1->next;
-        if(temp1==head) break;
-    }
-    return count;
-}
-
-void traverse(Node *head){
-    Node *temp1=head;
-    while (temp1!=NULL)
-    {
-        printf("[%d] ",temp1->data);
-        temp1=temp1->next;
-        if(temp1!=head) printf("-> ");
-        else break;
-    }
-    printf("\n");
-}
-
-void insertAtStart(Node **head, int value){
-    Node *node=init(value);
-    if(*head==NULL) {
-        node->next=node;
-    }
-    else{
-        Node *temp=*head;
-        while (temp->next!=*head){
-            temp=temp->next;
+        if (new.tail == NULL)
+        {
+            new.tail = create(head->data);
+            temp = new.tail;
         }
-        temp->next=node;
-        node->next=*head;
-    }
-    *head=node;
-}
-
-void insertAtEnd(Node **head, int value){
-    Node *node=init(value);
-    if(*head==NULL) {
-        node->next=node;
-        *head=node;
-    }
-    else{
-        Node *temp=*head;
-        while (temp->next!=*head){
-            temp=temp->next;
+        else
+        {
+            new.tail->next = create(head->data);
+            new.tail = new.tail->next;
         }
-        temp->next=node;
-        node->next=*head;
+        if (head == list.tail)
+        {
+            new.tail->next = temp;
+            break;
+        }
+        head = head->next;
+    }
+    return new;
+}
+
+Node *search(CircularLinkedList list, int value)
+{
+    if (list.tail == NULL)
+        return NULL;
+    Node *temp = list.tail;
+    while (true)
+    {
+        if (temp->data == value)
+            return temp;
+        temp = temp->next;
+        if (temp == list.tail)
+            break;
+    }
+    return NULL;
+}
+
+void reverse(CircularLinkedList *list)
+{
+    if (list->tail == NULL || list->tail == list->tail->next)
+        return;
+    Node *tempPrev = NULL;
+    Node *tempCurr = list->tail->next;
+    Node *tempNext = tempCurr->next;
+    while (true)
+    {
+        tempCurr->next = tempPrev;
+        if (tempCurr == list->tail)
+            break;
+        tempPrev = tempCurr;
+        tempCurr = tempNext;
+        tempNext = tempNext->next;
+    }
+    list->tail->next = tempNext;
+}
+
+void traverse(CircularLinkedList list)
+{
+    if (list.tail == NULL)
+        return;
+    Node *head = list.tail->next;
+    while (true)
+    {
+        printf("[%d]", head->data);
+        if (head == list.tail)
+        {
+            printf("\n");
+            break;
+        }
+        else
+        {
+            printf(" -> ");
+        }
+        head = head->next;
     }
 }
 
-void insertAtIndex(Node **head, int value, int index){
-    if(index<=0){
-        insertAtStart(head,value);
+void insertAtStart(CircularLinkedList *list, int value)
+{
+    Node *node = create(value);
+    list->length++;
+    if (list->tail == NULL)
+    {
+        list->tail = node;
+        node->next = node;
         return;
     }
-    if(index>=length(*head)){
-        insertAtEnd(head,value);
+    node->next = list->tail->next;
+    list->tail->next = node;
+}
+
+void insertAtEnd(CircularLinkedList *list, int value)
+{
+    Node *node = create(value);
+    list->length++;
+    if (list->tail == NULL)
+    {
+        list->tail = node;
+        node->next = node;
         return;
     }
-    Node *node=init(value);
-    Node *temp1=NULL;
-    Node *temp2=*head;
+    node->next = list->tail->next;
+    list->tail->next = node;
+    list->tail = node;
+}
+
+void insertAtIndex(CircularLinkedList *list, int value, int index)
+{
+    if (index <= 0)
+        return insertAtStart(list, value);
+    if (index >= list->length)
+        return insertAtEnd(list, value);
+    Node *node = create(value);
+    list->length++;
+    Node *temp1 = NULL;
+    Node *temp2 = list->tail->next;
     for (int i = 0; i < index; i++)
     {
-        temp1=temp2;
-        temp2=temp2->next;
+        temp1 = temp2;
+        temp2 = temp2->next;
     }
-    temp1->next=node;
-    node->next=temp2;
+    temp1->next = node;
+    node->next = temp2;
 }
 
-void insertAfterValue(Node **head, int new, int old){
-    Node *temp=find(*head,old);
-    if(temp==NULL) return;
-    if(temp->next==*head){
-        insertAtEnd(head,new);
+void insertAfterValue(CircularLinkedList *list, int new, int old)
+{
+    Node *temp = search(*list, old);
+    if (temp == NULL)
         return;
-    }
-    Node *node=init(new);
-    node->next=temp->next;
-    temp->next=node;
+    Node *node = create(new);
+    list->length++;
+    node->next = temp->next;
+    temp->next = node;
+    if (temp == list->tail)
+        list->tail = node;
 }
 
-int deleteStart(Node **head){
-    Node *temp1=*head;
-    if(temp1==NULL) return -1;
-    else if(temp1->next==temp1){
-        *head=NULL;
+int deleteStart(CircularLinkedList *list)
+{
+    if (list->tail == NULL)
+        return -1;
+    list->length--;
+    if (list->tail->next == list->tail)
+    {
+        int value = list->tail->data;
+        free(list->tail);
+        list->tail = NULL;
+        return value;
     }
-    else{
-        Node *temp2=*head;
-        while (temp2->next!=*head)
-        {
-            temp2=temp2->next;
-        }
-        temp2->next=temp1->next;
-        *head=(*head)->next;
-    }
-    int value=temp1->data;
-    free(temp1);
+    Node *head = list->tail->next;
+    list->tail->next = head->next;
+    int value = head->data;
+    free(head);
     return value;
 }
 
-int deleteEnd(Node **head){
-    Node *temp2=*head;
-    if(temp2==NULL) return -1;
-    else if(temp2->next==temp2){
-        *head=NULL;
+int deleteEnd(CircularLinkedList *list)
+{
+    if (list->tail == NULL)
+        return -1;
+    list->length--;
+    if (list->tail->next == list->tail)
+    {
+        int value = list->tail->data;
+        free(list->tail);
+        list->tail = NULL;
+        return value;
     }
-    else{
-        Node *temp1=NULL;
-        while (temp2->next!=*head)
-        {
-            temp1=temp2;
-            temp2=temp2->next;
-        }
-        temp1->next=temp2->next;
-    }
-    int value=temp2->data;
-    free(temp2);
+    Node *temp = list->tail;
+    while (temp->next != list->tail)
+        temp = temp->next;
+    temp->next = list->tail->next;
+    int value = list->tail->data;
+    free(list->tail);
+    list->tail = temp;
     return value;
 }
 
-int deleteIndex(Node **head, int index){
-    if(index<=0) return deleteStart(head);
-    if(index>=length(*head)-1) return deleteEnd(head);
-    Node *temp1=NULL;
-    Node *temp2=*head;
+int deleteIndex(CircularLinkedList *list, int index)
+{
+    if (index <= 0)
+        return deleteStart(list);
+    if (index >= list->length - 1)
+        return deleteEnd(list);
+    Node *temp1 = NULL;
+    Node *temp2 = list->tail->next;
     for (int i = 0; i < index; i++)
     {
-        temp1=temp2;
-        temp2=temp2->next;
+        temp1 = temp2;
+        temp2 = temp2->next;
     }
-    temp1->next=temp2->next;
-    int value=temp2->data;
+    temp1->next = temp2->next;
+    int value = temp2->data;
     free(temp2);
+    list->length--;
     return value;
 }
 
-int deleteValue(Node **head, int value){
-    Node *temp2=find(*head,value);
-    if(temp2==NULL) return -1;
-    if(temp2==*head) return deleteStart(head);
-    if(temp2->next==*head) return deleteEnd(head);
-    Node *temp1=*head;
-    while(temp1->next!=temp2)
+int deleteValue(CircularLinkedList *list, int value)
+{
+    if (list->tail == NULL)
+        return -1;
+    if (list->tail->next == list->tail)
     {
-        temp1=temp1->next;
+        if (list->tail->data == value)
+        {
+            int value = list->tail->data;
+            free(list->tail);
+            list->tail = NULL;
+            list->length--;
+            return value;
+        }
+        return -1;
     }
-    temp1->next=temp2->next;
-    value=temp2->data;
-    free(temp2);
+    Node *tempPrev = list->tail;
+    Node *tempCurr = list->tail->next;
+    while (tempCurr->data != value)
+    {
+        tempPrev = tempCurr;
+        tempCurr = tempCurr->next;
+        if (tempPrev == list->tail)
+            return -1;
+    }
+    tempPrev->next = tempCurr->next;
+    if (tempCurr == list->tail)
+        list->tail = tempPrev;
+    free(tempCurr);
+    list->length--;
     return value;
 }
 
-void main(){
-    Node *head=NULL;
-    insertAtStart(&head,44);
-    insertAtStart(&head,11);
-    insertAtEnd(&head,22);
-    insertAtEnd(&head,66);
-    insertAtIndex(&head,55,2);
-    insertAtIndex(&head,33,4);
-    insertAfterValue(&head,77,11);
-    insertAfterValue(&head,88,66);
+void main()
+{
+    CircularLinkedList head=init();
+    insertAtStart(&head, 44);
+    insertAtStart(&head, 11);
+    insertAtEnd(&head, 22);
+    insertAtEnd(&head, 66);
+    insertAtIndex(&head, 55, 2);
+    insertAtIndex(&head, 33, 4);
+    insertAfterValue(&head, 77, 11);
+    insertAfterValue(&head, 88, 66);
+    printf("len %d\n",head.length);
     traverse(head);
-    deleteValue(&head,11);
+    
+    printf("%d\n",deleteValue(&head, 11));
+    printf("len %d\n",head.length);
     traverse(head);
-    deleteValue(&head,22);
+    printf("%d\n",deleteValue(&head, 22));
+    printf("len %d\n",head.length);
     traverse(head);
-    deleteValue(&head,33);
+    printf("%d\n",deleteValue(&head, 33));
+    printf("len %d\n",head.length);
     traverse(head);
-    deleteValue(&head,44);
+    printf("%d\n",deleteValue(&head, 44));
+    printf("len %d\n",head.length);
     traverse(head);
-    deleteValue(&head,55);
+    printf("%d\n",deleteValue(&head, 55));
+    printf("len %d\n",head.length);
     traverse(head);
-    deleteValue(&head,66);
+    printf("%d\n",deleteValue(&head, 66));
+    printf("len %d\n",head.length);
     traverse(head);
-    deleteValue(&head,77);
+    printf("%d\n",deleteValue(&head, 77));
+    printf("len %d\n",head.length);
     traverse(head);
-    deleteValue(&head,88);
+    printf("%d\n",deleteValue(&head, 88));
+    printf("len %d\n",head.length);
     traverse(head);
 }
