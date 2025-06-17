@@ -9,12 +9,6 @@ typedef struct{
     int size;
 }DoubleEndedQueue;
 
-void swap(int *a, int *b){
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
 DoubleEndedQueue init(int n){
     DoubleEndedQueue queue;
     queue.array=(int *)malloc(n*sizeof(int));

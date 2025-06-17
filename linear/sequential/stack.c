@@ -8,12 +8,6 @@ typedef struct{
     int size;
 }Stack;
 
-void swap(int *a, int *b){
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
 Stack init(int n){
     Stack stack;
     stack.array=(int *)malloc(n*sizeof(int));

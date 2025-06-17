@@ -9,12 +9,6 @@ typedef struct{
     int size;
 }CircularQueue;
 
-void swap(int *a, int *b){
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
 CircularQueue init(int n){
     CircularQueue queue;
     queue.array=(int *)malloc((n+1)*sizeof(int));

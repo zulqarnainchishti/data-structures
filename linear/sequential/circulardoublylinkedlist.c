@@ -9,12 +9,11 @@ typedef struct Node
     struct Node *next;
 } Node;
 
-typedef struct DoublyLinkedList
+typedef struct CircularDoublyLinkedList
 {
     struct Node *head;
-    struct Node *tail;
     int length;
-} DoublyLinkedList;
+} CircularDoublyLinkedList;
 
 Node *create(int value)
 {
@@ -25,19 +24,22 @@ Node *create(int value)
     return node;
 }
 
-DoublyLinkedList init()
+CircularDoublyLinkedList init()
 {
-    DoublyLinkedList list;
+    CircularDoublyLinkedList list;
     list.head = NULL;
-    list.tail = NULL;
     list.length = 0;
     return list;
 }
 
-void clear(DoublyLinkedList *list)
+void clear(CircularDoublyLinkedList *list)
 {
-    Node *tempPrev = NULL;
+    if (list->head == NULL)
+        return;
+    Node *tempPrev = list->head->prev;
     Node *tempCurr = list->head;
+    tempPrev->next = NULL;
+    tempCurr->prev = NULL;
     while (tempCurr != NULL)
     {
         tempPrev = tempCurr;
@@ -45,107 +47,115 @@ void clear(DoublyLinkedList *list)
         free(tempPrev);
     }
     list->head = NULL;
-    list->tail = NULL;
     list->length = 0;
 }
 
-DoublyLinkedList copy(DoublyLinkedList list)
+CircularDoublyLinkedList copy(CircularDoublyLinkedList list)
 {
-    DoublyLinkedList new = init();
+    CircularDoublyLinkedList new = init();
     if (list.head == NULL)
         return new;
-    while (list.head != NULL)
+    Node *temp1 = list.head, *temp2;
+    do
     {
-        Node *temp = create(list.head->data);
+        Node *node = create(temp1->data);
         if (new.head == NULL)
         {
-            new.head = temp;
-            new.tail = temp;
+            new.head = node;
+            temp2 = new.head;
         }
         else
         {
-            new.tail->next = temp;
-            temp->prev = new.tail;
-            new.tail = temp;
+            temp2->next = node;
+            node->prev = temp2;
+            temp2 = node;
         }
-        list.head = list.head->next;
-    }
-    new.length = list.length;
+        temp1 = temp1->next;
+    } while (temp1 != list.head);
+    temp2->next = new.head;
+    new.head->prev = temp2;
     return new;
 }
 
-Node *search(DoublyLinkedList list, int value)
+Node *search(CircularDoublyLinkedList list, int value)
 {
-    while (list.head != NULL)
+    if (list.head == NULL)
+        return NULL;
+    Node *temp = list.head;
+    do
     {
-        if (list.head->data == value)
-            return list.head;
-        list.head = list.head->next;
-    }
+        if (temp->data == value)
+            return temp;
+        temp = temp->next;
+    } while (temp != list.head);
     return NULL;
 }
 
-void reverse(DoublyLinkedList *list)
+void reverse(CircularDoublyLinkedList *list)
 {
-    if (list->head == NULL || list->head == list->tail)
+    if (list->head == NULL || list->head == list->head->next)
         return;
-    Node *oldHead = list->head;
-    Node *oldTail = list->tail;
-    Node *tempPrev = NULL;
     Node *tempCurr = list->head;
-    while (tempCurr != NULL)
+    Node *tempNext;
+    do
     {
-        Node *tempNext = tempCurr->next;
+        tempNext = tempCurr->next;
+        tempCurr->next = tempCurr->prev;
         tempCurr->prev = tempNext;
-        tempCurr->next = tempPrev;
-        tempPrev = tempCurr;
         tempCurr = tempNext;
-    }
-    list->head = oldTail;
-    list->tail = oldHead;
+    } while (tempCurr != list->head);
+    list->head = list->head->next;
 }
 
-void traverse(DoublyLinkedList list)
+void traverse(CircularDoublyLinkedList list)
 {
-    while (list.head != NULL)
+    if (list.head == NULL)
+        return;
+    Node *temp = list.head;
+    do
     {
-        printf("[%d] ", list.head->data);
-        list.head = list.head->next;
-        printf((list.head != NULL) ? "<=> " : "\n");
-    }
+        printf("[%d] ", temp->data);
+        temp = temp->next;
+        printf((temp != list.head) ? "<=> " : "\n");
+    } while (temp != list.head);
 }
 
-void insertAtStart(DoublyLinkedList *list, int value)
+void insertAtStart(CircularDoublyLinkedList *list, int value)
 {
     Node *node = create(value);
     list->length++;
     if (list->head == NULL)
     {
         list->head = node;
-        list->tail = node;
+        node->prev = node;
+        node->next = node;
         return;
     }
+    node->prev = list->head->prev;
     node->next = list->head;
     list->head->prev = node;
+    node->prev->next = node;
     list->head = node;
 }
 
-void insertAtEnd(DoublyLinkedList *list, int value)
+void insertAtEnd(CircularDoublyLinkedList *list, int value)
 {
     Node *node = create(value);
     list->length++;
     if (list->head == NULL)
     {
         list->head = node;
-        list->tail = node;
+        node->prev = node;
+        node->next = node;
         return;
     }
-    list->tail->next = node;
-    node->prev = list->tail;
-    list->tail = node;
+    node->next = list->head;
+    node->prev = list->head->prev;
+    list->head->prev = node;
+    node->prev->next = node;
 }
 
-void insertAtIndex(DoublyLinkedList *list, int value, int index)
+void insertAtIndex(CircularDoublyLinkedList *list, int value, int index)
 {
     if (index <= 0)
         return insertAtStart(list, value);
@@ -163,7 +173,7 @@ void insertAtIndex(DoublyLinkedList *list, int value, int index)
     tempNext->prev = node;
 }
 
-void insertAfterValue(DoublyLinkedList *list, int new, int old)
+void insertAfterValue(CircularDoublyLinkedList *list, int new, int old)
 {
     Node *tempPrev = search(*list, old);
     if (tempPrev == NULL)
@@ -171,62 +181,58 @@ void insertAfterValue(DoublyLinkedList *list, int new, int old)
     Node *node = create(new);
     list->length++;
     Node *tempNext = tempPrev->next;
-    node->prev = tempPrev;
     tempPrev->next = node;
-    if (tempPrev != list->tail)
-    {
-        tempNext->prev = node;
-        node->next = tempNext;
-    }
-    else
-    {
-        list->tail = node;
-    }
+    node->prev = tempPrev;
+    node->next = tempNext;
+    tempNext->prev = node;
 }
 
-int deleteStart(DoublyLinkedList *list)
+int deleteStart(CircularDoublyLinkedList *list)
 {
     if (list->head == NULL)
         return -1;
     list->length--;
-    if (list->head == list->tail)
+    if (list->head == list->head->next)
     {
         int value = list->head->data;
         free(list->head);
         list->head = NULL;
-        list->tail = NULL;
         return value;
     }
-    Node *temp = list->head;
-    list->head = list->head->next;
-    list->head->prev = NULL;
-    int value = temp->data;
-    free(temp);
+    Node *tempCurr = list->head;
+    Node *tempPrev = tempCurr->prev;
+    Node *tempNext = tempCurr->next;
+    tempPrev->next = tempNext;
+    tempNext->prev = tempPrev;
+    list->head = tempNext;
+    int value = tempCurr->data;
+    free(tempCurr);
     return value;
 }
 
-int deleteEnd(DoublyLinkedList *list)
+int deleteEnd(CircularDoublyLinkedList *list)
 {
     if (list->head == NULL)
         return -1;
     list->length--;
-    if (list->head == list->tail)
+    if (list->head == list->head->next)
     {
         int value = list->head->data;
         free(list->head);
         list->head = NULL;
-        list->tail = NULL;
         return value;
     }
-    Node *temp = list->tail;
-    list->tail = list->tail->prev;
-    list->tail->next = NULL;
-    int value = temp->data;
-    free(temp);
+    Node *tempCurr = list->head->prev;
+    Node *tempPrev = tempCurr->prev;
+    Node *tempNext = tempCurr->next;
+    tempPrev->next = tempNext;
+    tempNext->prev = tempPrev;
+    int value = tempCurr->data;
+    free(tempCurr);
     return value;
 }
 
-int deleteIndex(DoublyLinkedList *list, int index)
+int deleteIndex(CircularDoublyLinkedList *list, int index)
 {
     if (list->head == NULL)
         return -1;
@@ -247,18 +253,17 @@ int deleteIndex(DoublyLinkedList *list, int index)
     return value;
 }
 
-int deleteValue(DoublyLinkedList *list, int value)
+int deleteValue(CircularDoublyLinkedList *list, int value)
 {
     if (list->head == NULL)
         return -1;
-    if (list->head == list->tail)
+    if (list->head == list->head->next)
     {
         if (list->head->data == value)
         {
             free(list->head);
             list->length--;
             list->head = NULL;
-            list->tail = NULL;
             return value;
         }
         return -1;
@@ -269,28 +274,17 @@ int deleteValue(DoublyLinkedList *list, int value)
     list->length--;
     Node *tempPrev = tempCurr->prev;
     Node *tempNext = tempCurr->next;
+    tempPrev->next = tempNext;
+    tempNext->prev = tempPrev;
     if (tempCurr == list->head)
-    {
         list->head = tempNext;
-        tempNext->prev = NULL;
-    }
-    else if (tempCurr == list->tail)
-    {
-        list->tail = tempPrev;
-        tempPrev->next = NULL;
-    }
-    else
-    {
-        tempPrev->next = tempNext;
-        tempNext->prev = tempPrev;
-    }
     free(tempCurr);
     return value;
 }
 
 int main()
 {
-    DoublyLinkedList head = init();
+    CircularDoublyLinkedList head = init();
 
     insertAtStart(&head, 44);
     insertAtStart(&head, 11);
@@ -304,11 +298,11 @@ int main()
 
     reverse(&head);
     traverse(head);
-    
+
     deleteStart(&head);
     deleteEnd(&head);
-    deleteIndex(&head,0);
-    deleteValue(&head,22);
+    deleteIndex(&head, 0);
+    deleteValue(&head, 22);
     traverse(head);
 
     return 0;

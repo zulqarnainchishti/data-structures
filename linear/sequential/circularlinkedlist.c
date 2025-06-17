@@ -14,13 +14,6 @@ typedef struct CircularLinkedList
     int length;
 } CircularLinkedList;
 
-void swap(int *a, int *b)
-{
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
 Node *create(int value)
 {
     Node *node = (Node *)malloc(sizeof(Node));
