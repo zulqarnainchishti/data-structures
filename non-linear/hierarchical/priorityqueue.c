@@ -140,30 +140,6 @@ void heapifyUp(PriorityQueue *queue, int chld)
     }
 }
 
-int heapifyDown(PriorityQueue *queue, int index)
-{
-    int prnt = index;
-    int lchld = leftChild(prnt);
-    int rchld = rightChild(prnt);
-    int chld;
-    if (lchld > queue->length - 1)
-        return -1;
-    else if (rchld > queue->length - 1)
-        chld = lchld;
-    else
-    {
-        if (queue->type == -1)
-            chld = (queue->array[lchld].priority < queue->array[rchld].priority) ? lchld : rchld;
-        else if (queue->type == 1)
-            chld = (queue->array[lchld].priority > queue->array[rchld].priority) ? lchld : rchld;
-    }
-    if (queue->type == -1 && !(queue->array[prnt].priority <= queue->array[chld].priority))
-        swap(queue->array + prnt, queue->array + chld);
-    else if (queue->type == 1 && !(queue->array[prnt].priority >= queue->array[chld].priority))
-        swap(queue->array + prnt, queue->array + chld);
-    return chld;
-}
-
 void heapifyDown(PriorityQueue *queue, int prnt)
 {
     int left = leftChild(prnt);
@@ -266,19 +242,68 @@ void traverse(PriorityQueue queue)
 
 int main()
 {
-    PriorityQueue qyu1 = init(10, 1);
-    enqueue(&qyu1, 11, 50);
-    enqueue(&qyu1, 22, 10);
-    enqueue(&qyu1, 33, 30);
-    enqueue(&qyu1, 44, 40);
-    enqueue(&qyu1, 55, 70);
-    enqueue(&qyu1, 66, 20);
-    enqueue(&qyu1, 77, 60);
-    traverse(qyu1);
-    printf("peeked = %d\n", peek(qyu1));
-    printf("dequeued = %d\n", dequeue(&qyu1));
-    change(&qyu1, 33, 100);
-    traverse(qyu1);
+    printf("=== Comprehensive PriorityQueue Manual Test Suite ===\n\n");
+
+    // Phase 1: Initialization
+    PriorityQueue q = init(6, -1);
+    printf("Initialized queue with capacity 6 (min-heap)\n");
+
+    // Phase 2: Insertion + HeapifyUp
+    enqueue(&q, 10, 3);
+    enqueue(&q, 20, 5);
+    enqueue(&q, 30, 1);
+    enqueue(&q, 40, 4);
+    enqueue(&q, 50, 2);
+    printf("Inserted 5 elements (data,priority): (10,3), (20,5), (30,1), (40,4), (50,2)\n");
+
+    // Phase 3: Search + Peek
+    int idx = search(q, 20);
+    printf("Search for value 20: %s (index %d)\n", (idx != -1) ? "FOUND" : "NOT FOUND", idx);
+
+    printf("Peek (root element data): %d\n", peek(q));
+
+    // Phase 4: Traversal
+    printf("Traversing queue (data,priority) by levels:\n");
+    traverse(q);
+
+    // Phase 5: isEmpty, isFull
+    printf("Queue is %s\n", isEmpty(q) ? "EMPTY" : "NOT EMPTY");
+    printf("Queue is %s\n", isFull(q) ? "FULL" : "NOT FULL");
+
+    // Phase 6: Update (which triggers HeapifyUp/Down)
+    printf("Updating value 20's priority to 0 (should move to root)\n");
+    update(&q, 20, 0);
+    printf("After update:\n");
+    traverse(q);
+    printf("Peek now: %d\n", peek(q));
+
+    // Phase 7: isAscending / isDescending
+    printf("Queue is %s an ascending priority queue\n", isAscending(q) ? "" : "NOT");
+    printf("Queue is %s a descending priority queue\n", isDescending(q) ? "" : "NOT");
+
+    // Phase 8: Dequeue (extract min) and test heapifyDown
+    int removed = dequeue(&q);
+    printf("Dequeued element (should be 20): %d\n", removed);
+    printf("After dequeue:\n");
+    traverse(q);
+
+    // Phase 9: Copy Queue
+    PriorityQueue q2 = copy(q);
+    printf("Copied queue contents:\n");
+    traverse(q2);
+
+    // Phase 10: Clear
+    printf("Clearing original queue...\n");
+    clear(&q);
+    printf("Original queue is now %s\n", isEmpty(q) ? "EMPTY" : "NOT EMPTY");
+
+    // Phase 11: Delete both queues
+    delete(&q);
+    printf("Deleted original queue\n");
+    delete(&q2);
+    printf("Deleted copied queue\n");
+
+    printf("\n=== All manual operations and checks executed successfully ===\n");
 
     return 0;
 }
