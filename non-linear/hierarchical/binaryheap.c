@@ -24,8 +24,8 @@ Heap init(int N, int T)
     Heap heap;
     heap.type = (T < 0) ? -1 : 1;
     heap.array = (int *)malloc(N * sizeof(int));
-    heap.size = N;
     heap.length = 0;
+    heap.size = N;
     return heap;
 }
 
@@ -100,47 +100,34 @@ bool isMaxHeap(Heap heap)
     return true;
 }
 
-bool isHeap(Heap heap)
+void heapifyUp(Heap *heap, int chld)
 {
-    // flag = -1 : min  heap
-    // flag =  0 : both heap
-    // flag =  1 : max  heap
-    int flag = 0;
-    if (isMinHeap(heap))
-        flag += -1;
-    if (isMaxHeap(heap))
-        flag += 1;
-    return flag;
-}
-
-void heapifyUp(Heap *heap, int index)
-{
-    if (index == 0)
+    if (chld == 0)
         return;
-    int prnt = parent(index);
+    int prnt = parent(chld);
     if (heap->type == -1)
     {
-        if (heap->array[prnt] > heap->array[index])
+        if (heap->array[prnt] > heap->array[chld])
         {
-            swap(heap->array + prnt, heap->array + index);
+            swap(heap->array + prnt, heap->array + chld);
             heapifyUp(heap, prnt);
         }
     }
     else if (heap->type == 1)
     {
-        if (heap->array[prnt] < heap->array[index])
+        if (heap->array[prnt] < heap->array[chld])
         {
-            swap(heap->array + prnt, heap->array + index);
+            swap(heap->array + prnt, heap->array + chld);
             heapifyUp(heap, prnt);
         }
     }
 }
 
-void heapifyDown(Heap *heap, int index)
+void heapifyDown(Heap *heap, int prnt)
 {
-    int left = leftChild(index);
-    int right = rightChild(index);
-    int selected = index;
+    int left = leftChild(prnt);
+    int right = rightChild(prnt);
+    int selected = prnt;
     if (heap->type == -1)
     {
         if (left < heap->length && heap->array[selected] > heap->array[left])
@@ -155,9 +142,9 @@ void heapifyDown(Heap *heap, int index)
         if (right < heap->length && heap->array[selected] < heap->array[right])
             selected = right;
     }
-    if (selected != index)
+    if (selected != prnt)
     {
-        swap(&heap->array[selected], &heap->array[index]);
+        swap(&heap->array[selected], &heap->array[prnt]);
         heapifyDown(heap, selected);
     }
 }
@@ -206,7 +193,7 @@ void traverse(Heap heap)
     int levelEnd = 0;
     for (int i = 0; i < heap.length; i++)
     {
-        printf("<%d> ", heap.array[i]);
+        printf("(%d) ", heap.array[i]);
         if (i == levelEnd || i==heap.length-1)
         {
             printf("\n");
