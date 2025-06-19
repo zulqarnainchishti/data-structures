@@ -2,307 +2,387 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include <math.h>
 
-typedef struct Node {
+typedef struct Node
+{
     char *key;
     int value;
     struct Node *next;
 } Node;
 
-typedef struct HashTable {
-    int minSize;
-    int maxSize;
-    Node **array;
+typedef struct HashTable
+{
+    Node **buckets;
+    int size;
     int length;
 } HashTable;
 
-HashTable init(int N) {
+HashTable init(int capacity)
+{
     HashTable table;
-    table.minSize = N;
-    table.maxSize = N;
-    table.array = (Node **)malloc(N*sizeof(Node *));
-    for (int i = 0; i < N; i++) {
-        table.array[i] = NULL;
-    }
+    table.buckets = (Node **)calloc(capacity, sizeof(Node *));
+    table.size = capacity;
     table.length = 0;
     return table;
 }
 
-HashTable copy(HashTable table){
+HashTable copy(HashTable table)
+{
     HashTable new;
-    new.minSize = table.minSize;
-    new.maxSize = table.maxSize;
-    new.array = (Node **)malloc(table.maxSize*sizeof(Node *));
-    for (int i = 0; i < table.maxSize; i++) {
-        new.array[i] = table.array[i];
-    }
+    new.size = table.size;
     new.length = table.length;
+    new.buckets = (Node **)calloc(new.size, sizeof(Node *));
+    for (int i = 0; i < table.size; i++)
+    {
+        Node *src = table.buckets[i];
+        Node *dst = new.buckets[i];
+        while (src != NULL)
+        {
+            Node *node = (Node *)malloc(sizeof(Node));
+            node->key = strdup(src->key);
+            node->value = src->value;
+            node->next = NULL;
+            if (dst == NULL)
+                new.buckets[i] = node;
+            else
+                dst->next = node;
+            dst = node;
+            src = src->next;
+        }
+    }
     return new;
 }
 
-void clear(HashTable *table) {
-    Node *prev, *curr;
-    for (int i = 0; i < table->maxSize; i++) {
-        prev=NULL;
-        curr = table->array[i];
-        while(curr!=NULL){
-            prev=curr;
-            curr=curr->next;
-            free(prev->key);
-            free(prev);
+void clear(HashTable *table)
+{
+    Node *curr, *next;
+    for (int i = 0; i < table->size; i++)
+    {
+        curr = table->buckets[i];
+        while (curr != NULL)
+        {
+            next = curr->next;
+            free(curr->key);
+            free(curr);
+            curr = next;
         }
-        table->array[i]=NULL;
+        table->buckets[i] = NULL;
     }
-    table->length=0;
+    table->length = 0;
 }
 
-void delete(HashTable *table) {
-    Node *prev, *curr;
-    for (int i = 0; i < table->maxSize; i++) {
-        prev=NULL;
-        curr = table->array[i];
-        while(curr!=NULL){
-            prev=curr;
-            curr=curr->next;
-            free(prev->key);
-            free(prev);
+void delete(HashTable *table)
+{
+    Node *curr, *next;
+    for (int i = 0; i < table->size; i++)
+    {
+        curr = table->buckets[i];
+        while (curr != NULL)
+        {
+            next = curr->next;
+            free(curr->key);
+            free(curr);
+            curr = next;
         }
-        table->array[i]=NULL;
+        table->buckets[i] = NULL;
     }
-    table->maxSize=0;
-    table->minSize=0;
-    free(table->array);
-    table->array=NULL;
-    table->length=0;
+    free(table->buckets);
+    table->buckets = NULL;
+    table->size = 0;
+    table->length = 0;
 }
 
-int hash(char *key, int maxSize) {
-    unsigned int hash = 0;
-    while (*key) {
-        hash = (hash*31) + (*key++);
+int hashFunction(char *key, int size)
+{
+    // FNV-1a algorithm
+    unsigned long hash = 2166136261u;
+    // FNV 32-bit offset basis, 'u' enforces unsigned arithmetic with defined modular overflow (wrap-around modulo 2^32)
+    while (*key)
+    {
+        hash ^= (unsigned char)(*key++);
+        // cast enforces unsigned 8-bit interpretation (0–255)
+        hash *= 16777619u;
+        // FNV 32-bit prime, unsigned multiplication with well-defined modular overflow (mod 2^32)
     }
-    float k=(pow(5,0.5)-1)/2;
-    return (int)floor(maxSize*fmod(k*hash,1));
+    int index = hash % size;
+    // index in [0, size-1]
+    return index;
 }
 
-float loadFactor(HashTable table){
-    return (float)table.length/table.maxSize;
+float loadFactor(HashTable table)
+{
+    return (float)table.length / table.size;
 }
 
-void rehash(HashTable *table){
-    float currentLoadFactor=loadFactor(*table);
-    int newSize;
-    if(currentLoadFactor>=0.75)
-        newSize=table->maxSize*2;
-    else if(currentLoadFactor<=0.25 && table->minSize<table->maxSize)
-        newSize=table->minSize>table->maxSize/2?table->minSize:table->maxSize/2;
-    else return;
-    
-    HashTable newTable=init(newSize);
-    newTable.minSize=table->minSize;
-    for (int i = 0; i < table->maxSize; i++) {
-        Node *curr = table->array[i];
-        while(curr!=NULL){
-            int index=hash(curr->key,newSize);
-            Node *newNode = (Node *)malloc(sizeof(Node));
-            newNode->key=strdup(curr->key);
-            newNode->value=curr->value;
-            newNode->next=newTable.array[index];
-            newTable.array[index]=newNode;
-            newTable.length++;
-            curr=curr->next;
+void resize(HashTable *table)
+{
+    if (loadFactor(*table) > 0.75)
+    {
+        int newSize = table->size * 2;
+        Node **newBuckets = (Node **)calloc(newSize, sizeof(Node *));
+        for (int i = 0; i < table->size; i++)
+        {
+            Node *curr = table->buckets[i];
+            while (curr != NULL)
+            {
+                Node *next = curr->next;
+                int index = hashFunction(curr->key, newSize);
+                curr->next = newBuckets[index];
+                newBuckets[index] = curr;
+                curr = next;
+            }
         }
+        free(table->buckets);
+        table->buckets = newBuckets;
+        table->size = newSize;
     }
-    delete(table);
-    *table=newTable;
 }
 
-bool isin(HashTable table, char *key) {
-    int index = hash(key,table.maxSize);
-    Node* curr = table.array[index];
-
-    while(curr!=NULL){
-        if(strcmp(curr->key,key)==0){
+bool contains(HashTable table, char *key)
+{
+    int index = hashFunction(key, table.size);
+    Node *curr = table.buckets[index];
+    while (curr != NULL)
+    {
+        if (strcmp(curr->key, key) == 0)
             return true;
-        }
-        curr=curr->next;
+        curr = curr->next;
     }
     return false;
 }
 
-int get(HashTable table, char *key) {
-    int index = hash(key,table.maxSize);
-    Node* curr = table.array[index];
-
-    while(curr!=NULL){
-        if(strcmp(curr->key,key)==0){
+int get(HashTable table, char *key)
+{
+    int index = hashFunction(key, table.size);
+    Node *curr = table.buckets[index];
+    while (curr != NULL)
+    {
+        if (strcmp(curr->key, key) == 0)
             return curr->value;
-        }
-        curr=curr->next;
+        curr = curr->next;
     }
     return -1;
 }
 
-void put(HashTable *table, char *key, int value) {
-    int index = hash(key,table->maxSize);
-    Node *curr = table->array[index];
-
-    while(curr!=NULL){
-        if(strcmp(curr->key,key)==0){
-            curr->value=value;
-            return;
-        }
-        curr=curr->next;
-    }
-
-    Node *new = (Node *)malloc(sizeof(Node));
-    new->key=strdup(key);
-    new->value=value;
-    new->next=table->array[index];
-    table->array[index]=new;
-    table->length++;
-    
-    rehash(table);
-}
-
-void pop(HashTable *table, char *key) {
-    int index = hash(key,table->maxSize);
-    Node* prev = NULL;
-    Node* curr = table->array[index];
-
-    while(curr!=NULL){
-        if(strcmp(curr->key,key)==0){
-            if(prev==NULL){
-                table->array[index]=curr->next;
-            }else{
-                prev->next=curr->next;
-            }
+int pop(HashTable *table, char *key)
+{
+    int index = hashFunction(key, table->size);
+    Node *prev = NULL;
+    Node *curr = table->buckets[index];
+    while (curr != NULL)
+    {
+        if (strcmp(curr->key, key) == 0)
+        {
+            if (prev == NULL)
+                table->buckets[index] = curr->next;
+            else
+                prev->next = curr->next;
+            int value = curr->value;
             free(curr->key);
             free(curr);
             table->length--;
-            break;
+            return value;
         }
-        prev=curr;
-        curr=curr->next;
+        prev = curr;
+        curr = curr->next;
     }
-    
-    rehash(table);
+    return -1;
 }
 
-char **keys(HashTable table){
-    char **keyList=(char **)malloc(table.length*sizeof(char *));
-    int count=0;
+void put(HashTable *table, char *key, int value)
+{
+    int index = hashFunction(key, table->size);
+    Node *curr = table->buckets[index];
+    while (curr != NULL)
+    {
+        if (strcmp(curr->key, key) == 0)
+        {
+            curr->value = value;
+            return;
+        }
+        curr = curr->next;
+    }
+    Node *newNode = (Node *)malloc(sizeof(Node));
+    newNode->key = strdup(key);
+    newNode->value = value;
+    newNode->next = table->buckets[index];
+    table->buckets[index] = newNode;
+    table->length++;
+    resize(table);
+}
+
+char **keys(HashTable table)
+{
+    char **keyList = (char **)malloc(table.length * sizeof(char *));
+    int count = 0;
     Node *curr;
-    for (int i = 0; i < table.maxSize; i++) {
-        curr = table.array[i];
-        while(curr!=NULL){
-            keyList[count++]=strdup(curr->key);
-            curr=curr->next;
+    for (int i = 0; i < table.size; i++)
+    {
+        curr = table.buckets[i];
+        while (curr != NULL)
+        {
+            keyList[count++] = strdup(curr->key);
+            curr = curr->next;
         }
     }
     return keyList;
 }
 
-int *values(HashTable table){
-    int *valueList=(int *)malloc(table.length*sizeof(int));
-    int count=0;
+int *values(HashTable table)
+{
+    int *valueList = (int *)malloc(table.length * sizeof(int));
+    int count = 0;
     Node *curr;
-    for (int i = 0; i < table.maxSize; i++) {
-        curr = table.array[i];
-        while(curr!=NULL){
-            valueList[count++]=curr->value;
-            curr=curr->next;
+    for (int i = 0; i < table.size; i++)
+    {
+        curr = table.buckets[i];
+        while (curr != NULL)
+        {
+            valueList[count++] = curr->value;
+            curr = curr->next;
         }
     }
     return valueList;
 }
 
-Node *items(HashTable table){
-    Node *itemList=(Node *)malloc(table.length*sizeof(Node));
-    int count=0;
+Node *items(HashTable table)
+{
+    Node *itemList = (Node *)malloc(table.length * sizeof(Node));
+    int count = 0;
     Node *curr;
-    for (int i = 0; i < table.maxSize; i++) {
-        curr = table.array[i];
-        while(curr!=NULL){
-            Node new;
-            new.key=strdup(curr->key);
-            new.value=curr->value;
-            new.next=NULL;
-            itemList[count++]=new;
-            curr=curr->next;
+    for (int i = 0; i < table.size; i++)
+    {
+        curr = table.buckets[i];
+        while (curr != NULL)
+        {
+            itemList[count].key = strdup(curr->key);
+            itemList[count].value = curr->value;
+            itemList[count].next = NULL;
+            count++;
+            curr = curr->next;
         }
     }
     return itemList;
 }
 
-void traverse(HashTable table){
+void traverse(HashTable table)
+{
     printf("{ ");
-    for (int i = 0; i < table.maxSize; i++){
-        Node *curr=table.array[i];
-        while (curr!=NULL){
-            printf("%s:%d ",curr->key,curr->value);
-            curr=curr->next;
+    for (int i = 0; i < table.size; i++)
+    {
+        Node *curr = table.buckets[i];
+        while (curr != NULL)
+        {
+            printf("%s:%d ", curr->key, curr->value);
+            curr = curr->next;
         }
     }
-    printf("} : %.2f\n",loadFactor(table));
+    printf("} : %.2f\n", loadFactor(table));
 }
 
-void describe(HashTable table) {
+void describe(HashTable table)
+{
     Node *curr;
-    for (int i = 0; i < table.maxSize; i++) {
-        printf("%2d | ",i);
-        curr = table.array[i];
-        while(curr!=NULL){
-            printf("{%s,%d}",curr->key,curr->value);
-            curr=curr->next;
-            if(curr!=NULL) printf(" -> ");
+    for (int i = 0; i < table.size; i++)
+    {
+        printf("%2d | ", i);
+        curr = table.buckets[i];
+        while (curr != NULL)
+        {
+            printf("{%s,%d}", curr->key, curr->value);
+            curr = curr->next;
+            if (curr != NULL)
+                printf(" -> ");
         }
         printf("\n");
     }
 }
 
-int main() {
-    HashTable table = init(10);
+int main()
+{
+    printf("Initializing hash table...\n");
+    HashTable table = init(5);
+    describe(table);
 
-    put(&table,"Alice",25);
-    put(&table,"Bob",10);
-    put(&table,"Charlie",50);
-    put(&table,"Dennis",45);
-    put(&table,"Eve",30);
-    put(&table,"Fiona",40);
-    put(&table,"Ginny",20);
-    put(&table,"Henry",35);
+    // Test put()
+    printf("\nInserting elements...\n");
+    put(&table, "apple", 10);
+    put(&table, "banana", 20);
+    put(&table, "cherry", 30);
+    put(&table, "date", 40);
+    put(&table, "elderberry", 50); // should trigger resize
+    describe(table);
 
-    // char **list1=keys(table);
-    // for (int i = 0; i < table.length; i++)
-    // {
-    //     printf("%s, ",list1[i]);
-    // }
-    // printf("\n");
+    // Test get()
+    printf("\nRetrieving 'banana': %d\n", get(table, "banana"));
+    printf("Retrieving 'date': %d\n", get(table, "date"));
+    printf("Retrieving 'fig' (not present): %d\n", get(table, "fig"));
 
-    // int *list2=values(table);
-    // for (int i = 0; i < table.length; i++)
-    // {
-    //     printf("%d, ",list2[i]);
-    // }
-    // printf("\n");
+    // Test contains()
+    printf("\nContains 'apple': %d\n", contains(table, "apple"));
+    printf("Contains 'fig': %d\n", contains(table, "fig"));
 
-    // Node *list3=items(table);
-    // for (int i = 0; i < table.length; i++)
-    // {
-    //     printf("%s:%d, ",list3[i].key,list3[i].value);
-    // }
-    // printf("\n");
+    // Test pop()
+    printf("\nPopping 'banana': %d\n", pop(&table, "banana"));
+    printf("Popping 'fig' (not present): %d\n", pop(&table, "fig"));
+    describe(table);
 
-    // HashTable table2=copy(table);
-    // describe(table2);
-    // traverse(table2);
+    // Test keys()
+    printf("\nKeys in table:\n");
+    char **keysArray = keys(table);
+    for (int i = 0; i < table.length; i++)
+    {
+        printf("Key: %s\n", keysArray[i]);
+        free(keysArray[i]);
+    }
+    free(keysArray);
 
+    // Test values()
+    printf("\nValues in table:\n");
+    int *valuesArray = values(table);
+    for (int i = 0; i < table.length; i++)
+        printf("Value: %d\n", valuesArray[i]);
+    free(valuesArray);
+
+    // Test items()
+    printf("\nItems in table:\n");
+    Node *itemsArray = items(table);
+    for (int i = 0; i < table.length; i++)
+    {
+        printf("{%s, %d}\n", itemsArray[i].key, itemsArray[i].value);
+        free(itemsArray[i].key);
+    }
+    free(itemsArray);
+
+    // Test traverse()
+    printf("\nTraversing table:\n");
     traverse(table);
-    int i=17;
-    while(i-->0) put(&table,"Bob",get(table,"Bob")+1);
-    traverse(table);
 
-    return 0;
+    // Test clear()
+    printf("\nClearing table...\n");
+    clear(&table);
+    describe(table);
+
+    // Reinsert after clear
+    printf("\nReinserting after clear...\n");
+    put(&table, "grape", 60);
+    put(&table, "kiwi", 70);
+    describe(table);
+
+    // Test copy()
+    printf("\nCopying table...\n");
+    HashTable copyTable = copy(table);
+    describe(copyTable);
+
+    // Test delete() on original
+    printf("\nDeleting original table...\n");
+    delete(&table);
+    describe(table);
+
+    // Test describe() on copy to confirm it remains
+    printf("\nCopy table after original deletion:\n");
+    describe(copyTable);
+
+    // Final cleanup
+    delete(&copyTable);
 }
