@@ -4,357 +4,366 @@
 #include <stdbool.h>
 #include <math.h>
 
-typedef struct Node {
-    int value;
-    struct Node *next;
+typedef enum
+{
+    EMPTY,
+    OCCUPIED,
+    DELETED
+} Status;
+
+typedef struct
+{
+    int key;
+    Status flag;
 } Node;
 
-typedef struct Set {
-    int minSize;
-    int maxSize;
-    Node **array;
+typedef struct Set
+{
+    Node *buckets;
+    int size;
     int length;
 } Set;
 
-Set init(int N) {
+Set init(int capacity)
+{
     Set set;
-    set.minSize = N;
-    set.maxSize = N;
-    set.array = (Node **)malloc(N*sizeof(Node *));
-    for (int i = 0; i < N; i++){
-        set.array[i] = NULL;
-    }
+    set.buckets = (Node *)malloc(capacity * sizeof(Node));
+    for (int i = 0; i < capacity; i++)
+        set.buckets[i].flag = EMPTY;
+    set.size = capacity;
     set.length = 0;
     return set;
 }
 
-Set copy(Set set){
+Set copy(Set set)
+{
     Set new;
-    new.minSize = set.minSize;
-    new.maxSize = set.maxSize;
-    new.array = (Node **)malloc(set.maxSize*sizeof(Node *));
-    for (int i = 0; i < set.maxSize; i++) {
-        new.array[i] = set.array[i];
+    new.buckets = (Node *)malloc(set.size * sizeof(Node));
+    for (int i = 0; i < set.size; i++)
+    {
+        new.buckets[i].flag = set.buckets[i].flag;
+        if (set.buckets[i].flag == OCCUPIED)
+            new.buckets[i].key = set.buckets[i].key;
     }
+    new.size = set.size;
     new.length = set.length;
     return new;
 }
 
-void clear(Set *set) {
-    Node *prev, *curr;
-    for (int i = 0; i < set->maxSize; i++) {
-        prev=NULL;
-        curr = set->array[i];
-        while(curr!=NULL){
-            prev=curr;
-            curr=curr->next;
-            free(prev);
+void clear(Set *set)
+{
+    for (int i = 0; i < set->size; i++)
+        set->buckets[i].flag = EMPTY;
+    set->length = 0;
+}
+
+void delete(Set *set)
+{
+    free(set->buckets);
+    set->buckets = NULL;
+    set->size = 0;
+    set->length = 0;
+}
+
+float loadFactor(Set set)
+{
+    return (float)set.length / set.size;
+}
+
+int h1(int key, int size)
+{
+    // primary hash function: multiplication method
+    double A = (sqrt(5.0) - 1) / 2.0;
+    double frac = fmod(key * A, 1.0);
+    return (int)(size * frac);
+    // range [0, size-1]
+}
+int h2(int key, int size)
+{
+    // secondary hash function: division method
+    return (key % (size - 1)) + 1;
+    // range adjusted to avoid zero [1, size-1]
+}
+
+int hashFunction(int key, int size, int attempt)
+{
+    // Unified double hashing probe function
+    return (h1(key, size) + attempt * h2(key, size)) % size;
+}
+
+void resize(Set *set)
+{
+    if (loadFactor(*set) > 0.75)
+    {
+        int newSize = set->size * 2;
+        Node *newBuckets = (Node *)malloc(newSize * sizeof(Node));
+        for (int i = 0; i < newSize; i++)
+            newBuckets[i].flag = EMPTY;
+        for (int i = 0; i < set->size; i++)
+        {
+            if (set->buckets[i].flag == OCCUPIED)
+            {
+                int key = set->buckets[i].key;
+                for (int j = 0; j < newSize; j++)
+                {
+                    int index = hashFunction(key, newSize, j);
+                    if (newBuckets[index].flag == EMPTY)
+                    {
+                        newBuckets[index].key = key;
+                        newBuckets[index].flag = OCCUPIED;
+                        break;
+                    }
+                }
+            }
         }
-        set->array[i]=NULL;
+        free(set->buckets);
+        set->buckets = newBuckets;
+        set->size = newSize;
     }
-    set->length=0;
 }
 
-void delete(Set *set) {
-    Node *prev, *curr;
-    for (int i = 0; i < set->maxSize; i++) {
-        prev=NULL;
-        curr = set->array[i];
-        while(curr!=NULL){
-            prev=curr;
-            curr=curr->next;
-            free(prev);
-        }
-    }
-    set->minSize=0;
-    set->maxSize=0;
-    free(set->array);
-    set->array=NULL;
-    set->length=0;
-}
-
-int hash(int key, int maxSize) {
-    float k=(pow(5,0.5)-1)/2;
-    return (int)floor(maxSize*fmod(k*key,1));
-}
-
-float loadFactor(Set set){
-    return (float)set.length/set.maxSize;
-}
-
-void rehash(Set *set){
-    float currentLoadFactor=loadFactor(*set);
-    int newSize;
-    if(currentLoadFactor>=0.75)
-        newSize=set->maxSize*2;
-    else if(currentLoadFactor<=0.25 && set->minSize<set->maxSize)
-        newSize=set->minSize>set->maxSize/2?set->minSize:set->maxSize/2;
-    else return;
-    
-    Set newSet=init(newSize);
-    newSet.minSize=set->minSize;
-    for (int i = 0; i < set->maxSize; i++) {
-        Node *curr = set->array[i];
-        while(curr!=NULL){
-            int index=hash(curr->value,newSize);
-            Node *newNode = (Node *)malloc(sizeof(Node));
-            newNode->value=curr->value;
-            newNode->next=newSet.array[index];
-            newSet.array[index]=newNode;
-            newSet.length++;
-            curr=curr->next;
-        }
-    }
-    delete(set);
-    *set=newSet;
-}
-
-bool isIn(Set set, int value) {
-    int index = hash(value,set.maxSize);
-    Node* curr = set.array[index];
-    while(curr!=NULL){
-        if(curr->value==value) return true;
-        curr=curr->next;
+bool contains(Set set, int key)
+{
+    for (int i = 0; i < set.size; i++)
+    {
+        int index = hashFunction(key, set.size, i);
+        if (set.buckets[index].flag == EMPTY)
+            return false;
+        else if (set.buckets[index].flag == OCCUPIED)
+            if (set.buckets[index].key == key)
+                return true;
     }
     return false;
 }
 
-void insert(Set *set, int value) {
-    int index = hash(value,set->maxSize);
-    Node *curr = set->array[index];
-
-    while(curr!=NULL){
-        if(curr->value==value) return;
-        curr=curr->next;
+void insert(Set *set, int key)
+{
+    for (int i = 0; i < set->size; i++)
+    {
+        int index = hashFunction(key, set->size, i);
+        if (set->buckets[index].flag == OCCUPIED && set->buckets[index].key == key)
+            return;
+        if (set->buckets[index].flag == EMPTY || set->buckets[index].flag == DELETED)
+        {
+            set->buckets[index].flag = OCCUPIED;
+            set->buckets[index].key = key;
+            set->length++;
+            resize(set);
+            return;
+        }
     }
-
-    Node *new = (Node *)malloc(sizeof(Node));
-    new->value=value;
-    new->next=set->array[index];
-    set->array[index]=new;
-    set->length++;
-
-    rehash(set);
 }
 
-void discard(Set *set, int value) {
-    int index = hash(value,set->maxSize);
-    Node* prev = NULL;
-    Node* curr = set->array[index];
-
-    while(curr!=NULL){
-        if(curr->value==value){
-            if(prev==NULL){
-                set->array[index]=curr->next;
-            }else{
-                prev->next=curr->next;
-            }
-            free(curr);
+void discard(Set *set, int key)
+{
+    for (int i = 0; i < set->size; i++)
+    {
+        int index = hashFunction(key, set->size, i);
+        if (set->buckets[index].flag == EMPTY)
+            return;
+        if (set->buckets[index].flag == OCCUPIED && set->buckets[index].key == key)
+        {
+            set->buckets[index].flag = DELETED;
             set->length--;
-            break;
+            return;
         }
-        prev=curr;
-        curr=curr->next;
     }
-
-    rehash(set);
 }
 
-void traverse(Set set) {
+void traverse(Set set)
+{
     printf("{");
-    Node *curr;
-    for (int i = 0; i < set.maxSize; i++) {
-        curr = set.array[i];
-        while(curr!=NULL){
-            printf(" %d",curr->value);
-            curr=curr->next;
-        }
+    for (int i = 0; i < set.size; i++)
+    {
+        if (set.buckets[i].flag == OCCUPIED)
+            printf(" %d", set.buckets[i].key);
     }
-    printf(" } : %.2f\n",loadFactor(set));
+    printf(" } : %.2f\n", loadFactor(set));
 }
 
-Set unionOf(Set set1, Set set2) {
-    Set result = init(set1.maxSize+set2.maxSize);
-    Node *curr;
-    for (int i = 0; i < set1.maxSize; i++) {
-        curr = set1.array[i];
-        while (curr != NULL){
-            insert(&result, curr->value);
-            curr = curr->next;
-        }
-    }
-    for (int i = 0; i < set2.maxSize; i++) {
-        curr = set2.array[i];
-        while (curr != NULL) {
-            if (!isIn(result, curr->value))
-                insert(&result, curr->value);
-            curr = curr->next;
-        }
-    }
+Set unionOf(Set set1, Set set2)
+{
+    Set result = init(set1.size + set2.size);
+    for (int i = 0; i < set1.size; i++)
+        if (set1.buckets[i].flag == OCCUPIED)
+            insert(&result, set1.buckets[i].key);
+    for (int i = 0; i < set2.size; i++)
+        if (set2.buckets[i].flag == OCCUPIED)
+            insert(&result, set2.buckets[i].key);
     return result;
 }
 
-Set intersectionOf(Set set1, Set set2) {
-    Set result = init(set1.maxSize<set2.maxSize?set1.maxSize:set2.maxSize);
-    Node *curr;
-    for (int i = 0; i < set1.maxSize; i++) {
-        curr = set1.array[i];
-        while (curr != NULL) {
-            if (isIn(set2, curr->value)) {
-                insert(&result, curr->value);
-            }
-            curr = curr->next;
-        }
-    }
+Set intersectionOf(Set set1, Set set2)
+{
+    Set result = init(set1.size < set2.size ? set1.size : set2.size);
+    for (int i = 0; i < set1.size; i++)
+        if (set1.buckets[i].flag == OCCUPIED && contains(set2, set1.buckets[i].key))
+            insert(&result, set1.buckets[i].key);
     return result;
 }
 
-Set differenceOf(Set set1, Set set2) {
-    Set result = init(set1.maxSize);
-    Node *curr;
-    for (int i = 0; i < set1.maxSize; i++) {
-        curr = set1.array[i];
-        while (curr != NULL) {
-            if (!isIn(set2, curr->value)) {
-                insert(&result, curr->value);
-            }
-            curr = curr->next;
-        }
-    }
+Set differenceOf(Set set1, Set set2)
+{
+    Set result = init(set1.size);
+    for (int i = 0; i < set1.size; i++)
+        if (set1.buckets[i].flag == OCCUPIED && !contains(set2, set1.buckets[i].key))
+            insert(&result, set1.buckets[i].key);
     return result;
 }
 
-Set symmetricDifferenceOf(Set set1, Set set2) {
-    Set result = init(set1.maxSize + set2.maxSize);
-    Node *curr;
-    for (int i = 0; i < set1.maxSize; i++) {
-        curr = set1.array[i];
-        while (curr != NULL) {
-            if (!isIn(set2, curr->value)) {
-                insert(&result, curr->value);
-            }
-            curr = curr->next;
-        }
-    }
-    for (int i = 0; i < set2.maxSize; i++) {
-        curr = set2.array[i];
-        while (curr != NULL) {
-            if (!isIn(set1, curr->value)) {
-                insert(&result, curr->value);
-            }
-            curr = curr->next;
-        }
-    }
+Set symmetricDifferenceOf(Set set1, Set set2)
+{
+    Set result = init(set1.size + set2.size);
+    for (int i = 0; i < set1.size; i++)
+        if (set1.buckets[i].flag == OCCUPIED && !contains(set2, set1.buckets[i].key))
+            insert(&result, set1.buckets[i].key);
+    for (int i = 0; i < set2.size; i++)
+        if (set2.buckets[i].flag == OCCUPIED && !contains(set1, set2.buckets[i].key))
+            insert(&result, set2.buckets[i].key);
     return result;
 }
 
-bool isSubset(Set set1, Set set2) {
-    if(set1.length>set2.length) return false;
-    Node *curr;
-    for (int i = 0; i < set1.maxSize; i++) {
-        curr = set1.array[i];
-        while(curr!=NULL){
-            if(!isIn(set2,curr->value)){
-                return false;
-            }
-            curr=curr->next;
-        }
-    }
+bool isEqual(Set set1, Set set2)
+{
+    if (set1.length != set2.length)
+        return false;
+    for (int i = 0; i < set1.size; i++)
+        if (set1.buckets[i].flag == OCCUPIED && !contains(set2, set1.buckets[i].key))
+            return false;
     return true;
 }
 
-bool isProperSubset(Set set1, Set set2) {
-    if(set1.length>=set2.length) return false;
-    Node *curr;
-    for (int i = 0; i < set1.maxSize; i++) {
-        curr = set1.array[i];
-        while(curr!=NULL){
-            if(!isIn(set2,curr->value)){
-                return false;
-            }
-            curr=curr->next;
-        }
-    }
+bool isSubset(Set subset, Set set)
+{
+    if (subset.length > set.length)
+        return false;
+    for (int i = 0; i < subset.size; i++)
+        if (subset.buckets[i].flag == OCCUPIED && !contains(set, subset.buckets[i].key))
+            return false;
     return true;
 }
 
-bool isSuperset(Set set1, Set set2) {
-    return isSubset(set2,set1);
-}
-
-bool isProperSuperset(Set set1, Set set2) {
-    return isProperSubset(set2,set1);
-}
-
-bool isDisjoint(Set set1, Set set2) {
-    Node *curr;
-    for (int i = 0; i < set1.maxSize; i++) {
-        curr = set1.array[i];
-        while(curr!=NULL){
-            if(isIn(set2,curr->value)){
-                return false;
-            }
-            curr=curr->next;
-        }
-    }
-    return true;;
-}
-
-bool isEqual(Set set1, Set set2){
-    if(set1.length!=set2.length) return false;
-    Node *curr;
-    for (int i = 0; i < set1.maxSize; i++) {
-        curr = set1.array[i];
-        while(curr!=NULL){
-            if(!isIn(set2,curr->value)){
-                return false;
-            }
-            curr=curr->next;
-        }
-    }
+bool isProperSubset(Set subset, Set set)
+{
+    if (subset.length >= set.length)
+        return false;
+    for (int i = 0; i < subset.size; i++)
+        if (subset.buckets[i].flag == OCCUPIED && !contains(set, subset.buckets[i].key))
+            return false;
     return true;
 }
 
-void describe(Set set) {
-    Node *curr;
-    for (int i = 0; i < set.maxSize; i++) {
-        printf("%2d | ",i);
-        curr = set.array[i];
-        while(curr!=NULL){
-            printf("{%d} ",curr->value);
-            curr=curr->next;
-            if(curr!=NULL) printf(" -> ");
-        }
-        printf("\n");
+bool isSuperset(Set superset, Set set)
+{
+    return isSubset(set, superset);
+}
+
+bool isProperSuperset(Set superset, Set set)
+{
+    return isProperSubset(set, superset);
+}
+
+bool isDisjoint(Set set1, Set set2)
+{
+    for (int i = 0; i < set1.size; i++)
+        if (set1.buckets[i].flag == OCCUPIED && contains(set2, set1.buckets[i].key))
+            return false;
+    return true;
+}
+
+void describe(Set set)
+{
+    for (int i = 0; i < set.size; i++)
+    {
+        printf("%2d | ", i);
+        if (set.buckets[i].flag == EMPTY)
+            printf("EMP\n");
+        else if (set.buckets[i].flag == OCCUPIED)
+            printf("%d\n", set.buckets[i].key);
+        else if (set.buckets[i].flag == DELETED)
+            printf("DEL\n");
     }
 }
 
-int main() {
-    Set set1 = init(10);
+int main()
+{
+    // Initialize two sets
+    Set A = init(5);
+    Set B = init(5);
 
-    // insert(&set1,1);
-    // insert(&set1,3);
-    insert(&set1,5);
-    insert(&set1,7);
-    // insert(&set1,9);
-    insert(&set1,11);
-    insert(&set1,13);
-    // insert(&set1,15);
+    // Insert elements into Set A
+    insert(&A, 10);
+    insert(&A, 20);
+    insert(&A, 30);
+    printf("Set A: "); traverse(A);
 
-    traverse(set1);
-    describe(set1);
+    // Insert elements into Set B
+    insert(&B, 20);
+    insert(&B, 40);
+    printf("Set B: "); traverse(B);
 
-    Set set2 = init(10);
+    // Test contains
+    printf("Does A contain 10? %s\n", contains(A, 10) ? "Yes" : "No");
+    printf("Does B contain 10? %s\n", contains(B, 10) ? "Yes" : "No");
 
-    insert(&set2,1);
-    insert(&set2,3);
-    insert(&set2,9);
-    insert(&set2,15);
+    // Test discard
+    discard(&A, 20);
+    printf("Set A after removing 20: "); traverse(A);
 
-    traverse(set2);
-    describe(set2);
+    // Test union
+    Set U = unionOf(A, B);
+    printf("Union of A and B: "); traverse(U);
 
-    printf(">%d",isDisjoint(set1,set2));
+    // Test intersection
+    Set I = intersectionOf(A, B);
+    printf("Intersection of A and B: "); traverse(I);
+
+    // Test difference
+    Set D = differenceOf(A, B);
+    printf("Difference A - B: "); traverse(D);
+
+    // Test symmetric difference
+    Set SD = symmetricDifferenceOf(A, B);
+    printf("Symmetric difference of A and B: "); traverse(SD);
+
+    // Test equality
+    printf("Are A and B equal? %s\n", isEqual(A, B) ? "Yes" : "No");
+
+    // Test subset relations
+    printf("Is A a subset of U? %s\n", isSubset(A, U) ? "Yes" : "No");
+    printf("Is A a proper subset of U? %s\n", isProperSubset(A, U) ? "Yes" : "No");
+
+    // Test superset relations
+    printf("Is U a superset of A? %s\n", isSuperset(U, A) ? "Yes" : "No");
+    printf("Is U a proper superset of A? %s\n", isProperSuperset(U, A) ? "Yes" : "No");
+
+    // Test disjoint
+    Set C = init(5);
+    insert(&C, 50);
+    insert(&C, 60);
+    printf("Are A and C disjoint? %s\n", isDisjoint(A, C) ? "Yes" : "No");
+
+    // Test copy
+    Set AC = copy(A);
+    printf("Copy of A: "); traverse(AC);
+
+    // Test clear
+    clear(&AC);
+    printf("Cleared copy of A: "); traverse(AC);
+
+    // Test describe
+    printf("\nInternal structure of Set A:\n");
+    describe(A);
+
+    // Free all allocated memory
+    delete(&A);
+    delete(&B);
+    delete(&U);
+    delete(&I);
+    delete(&D);
+    delete(&SD);
+    delete(&C);
+    delete(&AC);
 
     return 0;
 }

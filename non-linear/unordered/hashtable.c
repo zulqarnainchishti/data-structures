@@ -92,6 +92,19 @@ void delete(HashTable *table)
     table->length = 0;
 }
 
+// int hashFunction(char *key, int size)
+// {
+//     // djb2 algorithm
+//     unsigned long hash = 5381;
+//     // magic constant chosen empirically for good distribution
+//     while (*key)
+//         hash = (hash << 5) + hash + *key++;
+//     // hash = hash * 33 + current character
+//     int index = hash % size;
+//     // index in [0, size-1]
+//     return index;
+// }
+
 int hashFunction(char *key, int size)
 {
     // FNV-1a algorithm
