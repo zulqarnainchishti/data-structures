@@ -3,817 +3,704 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-void swap(int *a, int *b)
-{
-    int temp = *a;
-    *a = *b;
-    *b = temp;
-}
-
-typedef struct Tree
+typedef struct BinarySearchTree
 {
     int data;
-    struct Tree *left;
-    struct Tree *right;
-} Tree;
+    struct BinarySearchTree *left;
+    struct BinarySearchTree *right;
+} BinarySearchTree;
 
-Tree *init(int value)
+BinarySearchTree *init(int value)
 {
-    Tree *node = (Tree *)malloc(sizeof(Tree));
+    BinarySearchTree *node = (BinarySearchTree *)malloc(sizeof(BinarySearchTree));
     node->data = value;
     node->left = NULL;
     node->right = NULL;
     return node;
 }
 
-void clear(Tree **head)
+BinarySearchTree *copy(BinarySearchTree *root)
 {
-    if (*head == NULL)
-        return;
-    clear(&(*head)->left);
-    clear(&(*head)->right);
-    free(*head);
-    *head = NULL;
+    if (root == NULL)
+        return NULL;
+    BinarySearchTree *new = init(root->data);
+    new->left = copy(root->left);
+    new->right = copy(root->right);
+    return new;
 }
 
-int size(Tree *head)
+BinarySearchTree *clear(BinarySearchTree *root)
 {
-    int count = 0;
-    if (head != NULL)
-        count = 1 + size(head->left) + size(head->right);
-    return count;
+    if (root == NULL)
+        return NULL;
+    root->left = clear(root->left);
+    root->right = clear(root->right);
+    free(root);
+    return NULL;
 }
 
-int degree(Tree *head)
+BinarySearchTree *mirror(BinarySearchTree *root)
 {
-    int count = 0;
-    if (head->left != NULL)
-        count++;
-    if (head->right != NULL)
-        count++;
-    return count;
+    if (root == NULL)
+        return NULL;
+    BinarySearchTree *new = init(root->data);
+    new->left = mirror(root->right);
+    new->right = mirror(root->left);
+    return new; // no longer a valid BST
 }
 
-Tree *max(Tree *head)
+BinarySearchTree *insert(BinarySearchTree *root, int value)
 {
-    while (head->right != NULL)
+    if (root == NULL)
     {
-        head = head->right;
+        BinarySearchTree *node = init(value);
+        return node;
     }
-    return head;
+    if (value < root->data)
+        root->left = insert(root->left, value);
+    else if (value > root->data)
+        root->right = insert(root->right, value);
+    return root;
 }
 
-Tree *min(Tree *head)
+BinarySearchTree *discard(BinarySearchTree *root, int value)
 {
-    while (head->left != NULL)
-    {
-        head = head->left;
-    }
-    return head;
-}
-
-Tree *successor(Tree *head, int value)
-{
-    Tree **stack = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int top = -1;
-    Tree *temp = NULL;
-    while (head != NULL || top >= 0)
-    {
-        while (head != NULL)
-        {
-            stack[++top] = head;
-            head = head->left;
-        }
-        head = stack[top--];
-        if (temp != NULL && temp->data == value)
-            break;
-        temp = head;
-        head = head->right;
-    }
-    free(stack);
-    return head;
-}
-
-Tree *predecessor(Tree *head, int value)
-{
-    Tree **stack = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int top = -1;
-    Tree *temp = NULL;
-    while (head != NULL || top >= 0)
-    {
-        while (head != NULL)
-        {
-            stack[++top] = head;
-            head = head->left;
-        }
-        head = stack[top--];
-        if (head->data == value)
-            break;
-        temp = head;
-        head = head->right;
-    }
-    free(stack);
-    return temp;
-}
-
-Tree *ceiling(Tree *head, int value)
-{
-    Tree **stack = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int top = -1;
-    Tree *temp = NULL;
-    while (head != NULL || top >= 0)
-    {
-        while (head != NULL)
-        {
-            stack[++top] = head;
-            head = head->right;
-        }
-        head = stack[top--];
-        if (head->data < value)
-            break;
-        temp = head;
-        head = head->left;
-    }
-    free(stack);
-    return temp;
-}
-
-Tree *floored(Tree *head, int value)
-{
-    Tree **stack = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int top = -1;
-    Tree *temp = NULL;
-    while (head != NULL || top >= 0)
-    {
-        while (head != NULL)
-        {
-            stack[++top] = head;
-            head = head->left;
-        }
-        head = stack[top--];
-        if (head->data > value)
-            break;
-        temp = head;
-        head = head->right;
-    }
-    free(stack);
-    return temp;
-}
-
-void insert(Tree **head, int value)
-{
-    if (*head == NULL)
-    {
-        *head = init(value);
-        return;
-    }
-    if (value < (*head)->data)
-        insert(&(*head)->left, value);
-    else if (value > (*head)->data)
-        insert(&(*head)->right, value);
-}
-
-Tree *parent(Tree *head, int value)
-{
-    Tree *temp = NULL;
-    while (head->data != value)
-    {
-        temp = head;
-        if (value < head->data)
-            head = head->left;
-        else if (value > head->data)
-            head = head->right;
-    }
-    return temp;
-}
-
-Tree *search(Tree *head, int value)
-{
-    if (head == NULL || value == head->data)
-        return head;
-    else if (value < head->data)
-        return search(head->left, value);
-    else
-        return search(head->right, value);
-}
-
-Tree *sibling(Tree *head, int value)
-{
-    head = parent(head, value);
-    if (head->left->data != value)
-        return head->left;
-    if (head->right->data != value)
-        return head->right;
-}
-
-int height(Tree *head, int value)
-{
-    head = search(head, value);
-    int getHeight(Tree * head)
-    {
-        if (head == NULL)
-            return -1;
-        return 1 + ((getHeight(head->left) >= getHeight(head->right)) ? getHeight(head->left) : getHeight(head->right));
-    }
-    return getHeight(head);
-}
-
-int depth(Tree *head, int value)
-{
-    int count = 0;
-    while (head != NULL && head->data != value)
-    {
-        count++;
-        if (value < head->data)
-            head = head->left;
-        else if (head->data < value)
-            head = head->right;
-    }
-    return count;
-}
-
-void delete(Tree **head, int value)
-{
-    Tree *temp2 = search(*head, value);
-    if (temp2 == NULL)
-        return;
-    Tree *temp1 = parent(*head, value);
-    if (temp2->left == NULL && temp2->right == NULL)
-    {
-        if (temp1->left == temp2)
-            temp1->left = NULL;
-        else if (temp1->right == temp2)
-            temp1->right = NULL;
-        free(temp2);
-    }
-    if (temp2->left == NULL || temp2->right == NULL)
-    {
-        Tree *temp3 = NULL;
-        if (temp2->left != NULL)
-            temp3 = temp2->left;
-        else if (temp1->right != NULL)
-            temp3 = temp2->right;
-        if (temp1->left == temp2)
-            temp1->left = temp3;
-        else if (temp1->right == temp2)
-            temp1->right = temp3;
-        free(temp2);
-    }
+    if (root == NULL)
+        return NULL;
+    if (value < root->data)
+        root->left = discard(root->left, value);
+    else if (value > root->data)
+        root->right = discard(root->right, value);
     else
     {
-        int prev = max(temp2->left)->data;
-        delete(&temp2, prev);
-        temp2->data = prev;
-    }
-}
-
-void preorderIterative(Tree *head)
-{
-    if (head == NULL)
-        return;
-    Tree **stack = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int top = -1;
-    stack[++top] = head;
-    while (top >= 0)
-    {
-        head = stack[top--];
-        printf("<%d> ", head->data);
-        if (head->right != NULL)
-            stack[++top] = head->right;
-        if (head->left != NULL)
-            stack[++top] = head->left;
-    }
-    free(stack);
-}
-
-void preorderRecursive(Tree *head)
-{
-    if (head == NULL)
-        return;
-    printf("<%d> ", head->data);
-    preorderRecursive(head->left);
-    preorderRecursive(head->right);
-}
-
-void inorderIterative(Tree *head)
-{
-    Tree **stack = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int top = -1;
-    while (head != NULL || top >= 0)
-    {
-        while (head != NULL)
+        if (root->left == NULL && root->right == NULL)
         {
-            stack[++top] = head;
-            head = head->left;
+            free(root);
+            return NULL;
         }
-        head = stack[top--];
-        printf("<%d> ", head->data);
-        head = head->right;
+        else if (root->left == NULL || root->right == NULL)
+        {
+            BinarySearchTree *temp = (root->left == NULL) ? root->right : root->left;
+            free(root);
+            return temp;
+        }
+        else
+        {
+            BinarySearchTree *succ = root->right;
+            while (succ->left != NULL)
+                succ = succ->left;
+            root->data = succ->data;
+            root->right = discard(root->right, succ->data);
+        }
     }
-    free(stack);
+    return root;
 }
 
-void inorderRecursive(Tree *head)
+int degree(BinarySearchTree *root)
 {
-    if (head == NULL)
-        return;
-    inorderRecursive(head->left);
-    printf("<%d> ", head->data);
-    inorderRecursive(head->right);
+    if (root == NULL)
+        return 0;
+    return (root->left != NULL) + (root->right != NULL);
 }
 
-void postorderIterative(Tree *head)
+int size(BinarySearchTree *root)
 {
-    if (head == NULL)
-        return;
-    Tree **stack1 = (Tree **)malloc(size(head) * sizeof(Tree *));
-    Tree **stack2 = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int top1 = -1, top2 = -1;
-    stack1[++top1] = head;
-    while (top1 >= 0)
+    if (root == NULL)
+        return 0;
+    return 1 + size(root->left) + size(root->right);
+}
+
+int external(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return 0;
+    if (root->left == NULL && root->right == NULL)
+        return 1;
+    return external(root->left) + external(root->right);
+}
+
+int internal(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return 0;
+    if (root->left == NULL && root->right == NULL)
+        return 0;
+    return 1 + internal(root->left) + internal(root->right);
+}
+
+int height(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return -1;
+    int leftHeight = height(root->left);
+    int rightHeight = height(root->right);
+    return 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+}
+
+int depth(BinarySearchTree *root, int value)
+{
+    int level = 0;
+    while (root != NULL)
     {
-        head = stack1[top1--];
-        stack2[++top2] = head;
-        if (head->left != NULL)
-            stack1[++top1] = head->left;
-        if (head->right != NULL)
-            stack1[++top1] = head->right;
+        if (value == root->data)
+            return level;
+        level++;
+        if (value < root->data)
+            root = root->left;
+        else
+            root = root->right;
     }
-    while (top2 >= 0)
+    return -1;
+}
+
+BinarySearchTree *search(BinarySearchTree *root, int value)
+{
+    while (root != NULL)
     {
-        head = stack2[top2--];
-        printf("<%d> ", head->data);
+        if (value == root->data)
+            return root;
+        else if (value < root->data)
+            root = root->left;
+        else
+            root = root->right;
     }
-    free(stack1);
-    free(stack2);
+    return NULL;
 }
 
-void postorderRecursive(Tree *head)
+BinarySearchTree *parent(BinarySearchTree *root, int value)
 {
-    if (head == NULL)
-        return;
-    postorderRecursive(head->left);
-    postorderRecursive(head->right);
-    printf("<%d> ", head->data);
+    BinarySearchTree *prev = NULL;
+    while (root != NULL)
+    {
+        if (value == root->data)
+            return prev;
+        prev = root;
+        if (value < root->data)
+            root = root->left;
+        else
+            root = root->right;
+    }
+    return NULL;
 }
 
-void levelorderIterative(Tree *head)
+BinarySearchTree *sibling(BinarySearchTree *root, int value)
 {
-    if (head == NULL)
+    BinarySearchTree *prev = NULL;
+    while (root != NULL)
+    {
+        if (value == root->data)
+        {
+            if (prev == NULL)
+                return NULL;
+            if (prev->left == root)
+                return prev->right;
+            else
+                return prev->left;
+        }
+        prev = root;
+        if (value < root->data)
+            root = root->left;
+        else
+            root = root->right;
+    }
+    return NULL;
+}
+
+BinarySearchTree *minimum(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return NULL;
+    while (root->left != NULL)
+        root = root->left;
+    return root;
+}
+
+BinarySearchTree *maximum(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return NULL;
+    while (root->right != NULL)
+        root = root->right;
+    return root;
+}
+
+BinarySearchTree *successor(BinarySearchTree *root, int value)
+{
+    BinarySearchTree *succ = NULL;
+    while (root != NULL)
+    {
+        if (value == root->data)
+        {
+            if (root->right != NULL)
+                return minimum(root->right);
+            else
+                return succ;
+        }
+        else if (value < root->data)
+        {
+            succ = root;
+            root = root->left;
+        }
+        else
+            root = root->right;
+    }
+    return NULL;
+}
+
+BinarySearchTree *predecessor(BinarySearchTree *root, int value)
+{
+    BinarySearchTree *pred = NULL;
+    while (root != NULL)
+    {
+        if (value == root->data)
+        {
+            if (root->left != NULL)
+                return maximum(root->left);
+            else
+                return pred;
+        }
+        else if (value > root->data)
+        {
+            pred = root;
+            root = root->right;
+        }
+        else
+            root = root->left;
+    }
+    return NULL;
+}
+
+BinarySearchTree *ceiling(BinarySearchTree *root, float value)
+{
+    BinarySearchTree *next = NULL;
+    while (root != NULL)
+    {
+        if (value == root->data)
+            return root;
+        else if (value < root->data)
+        {
+            next = root;
+            root = root->left;
+        }
+        else
+            root = root->right;
+    }
+    return next;
+}
+
+BinarySearchTree *floored(BinarySearchTree *root, float value)
+{
+    BinarySearchTree *prev = NULL;
+    while (root != NULL)
+    {
+        if (value == root->data)
+            return root;
+        else if (value > root->data)
+        {
+            prev = root;
+            root = root->right;
+        }
+        else
+            root = root->left;
+    }
+    return prev;
+}
+
+BinarySearchTree *lowestCommonAncestor(BinarySearchTree *root, int value1, int value2)
+{
+    if (root == NULL)
+        return NULL;
+    if (value1 < root->data && value2 < root->data)
+        return lowestCommonAncestor(root->left, value1, value2);
+    else if (value1 > root->data && value2 > root->data)
+        return lowestCommonAncestor(root->right, value1, value2);
+    else
+        return root;
+}
+
+int *path(BinarySearchTree *root, int value1, int value2, int *length)
+{
+    if (search(root, value1) == NULL || search(root, value2) == NULL)
+    {
+        *length = 0;
+        return NULL;
+    }
+    BinarySearchTree *lca = lowestCommonAncestor(root, value1, value2);
+    int dist1 = depth(lca, value1);
+    int dist2 = depth(lca, value2);
+    *length = dist1 + dist2 + 1;
+    int *sequence = (int *)malloc((*length) * sizeof(int));
+    BinarySearchTree *temp1 = lca;
+    for (int i = dist1 - 1; i >= 0; i--)
+    {
+        if (value1 < temp1->data)
+            temp1 = temp1->left;
+        else
+            temp1 = temp1->right;
+        sequence[i] = temp1->data;
+    }
+    sequence[dist1] = lca->data;
+    BinarySearchTree *temp2 = lca;
+    for (int i = 1; i <= dist2; i++)
+    {
+        if (value2 < temp2->data)
+            temp2 = temp2->left;
+        else
+            temp2 = temp2->right;
+        sequence[dist1 + i] = temp2->data;
+    }
+    return sequence;
+}
+
+void preorder(BinarySearchTree *root)
+{
+    if (root == NULL)
         return;
-    Tree **queue = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int front = -1, rear = -1;
-    queue[++rear] = head;
+    printf("<%d> ", root->data);
+    preorder(root->left);
+    preorder(root->right);
+}
+
+void inorder(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return;
+    inorder(root->left);
+    printf("<%d> ", root->data);
+    inorder(root->right);
+}
+
+void postorder(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return;
+    postorder(root->left);
+    postorder(root->right);
+    printf("<%d> ", root->data);
+}
+
+// void printLevel(BinarySearchTree *root, int level)
+// {
+//     if (root == NULL)
+//         return;
+//     if (level == 0)
+//         printf("<%d> ", root->data);
+//     else
+//     {
+//         printLevel(root->left, level - 1);
+//         printLevel(root->right, level - 1);
+//     }
+// }
+
+// void levelorder(BinarySearchTree *root)
+// {
+//     int levels = height(root);
+//     for (int i = 0; i <= levels; i++)
+//         printLevel(root, i);
+// }
+
+// void preorder(BinarySearchTree *root)
+// {
+//     if (root == NULL)
+//         return;
+//     BinarySearchTree **stack = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+//     int top = 0;
+//     stack[top++] = root;
+//     while (top > 0)
+//     {
+//         root = stack[--top];
+//         printf("<%d> ", root->data);
+//         if (root->right != NULL)
+//             stack[top++] = root->right;
+//         if (root->left != NULL)
+//             stack[top++] = root->left;
+//     }
+//     free(stack);
+// }
+
+// void inorder(BinarySearchTree *root)
+// {
+//     if (root == NULL)
+//         return;
+//     BinarySearchTree **stack = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+//     int top = 0;
+//     while (root != NULL || top > 0)
+//     {
+//         while (root != NULL)
+//         {
+//             stack[top++] = root;
+//             root = root->left;
+//         }
+//         root = stack[--top];
+//         printf("<%d> ", root->data);
+//         root = root->right;
+//     }
+//     free(stack);
+// }
+
+// void postorder(BinarySearchTree *root)
+// {
+//     if (root == NULL)
+//         return;
+//     int nodes = size(root);
+//     BinarySearchTree **stack1 = (BinarySearchTree **)malloc(nodes * sizeof(BinarySearchTree *));
+//     BinarySearchTree **stack2 = (BinarySearchTree **)malloc(nodes * sizeof(BinarySearchTree *));
+//     int top1 = 0, top2 = 0;
+//     stack1[top1++] = root;
+//     while (top1 > 0)
+//     {
+//         root = stack1[--top1];
+//         stack2[top2++] = root;
+//         if (root->left != NULL)
+//             stack1[top1++] = root->left;
+//         if (root->right != NULL)
+//             stack1[top1++] = root->right;
+//     }
+//     while (top2 > 0)
+//     {
+//         root = stack2[--top2];
+//         printf("<%d> ", root->data);
+//     }
+//     free(stack1);
+//     free(stack2);
+// }
+
+void levelorder(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return;
+    BinarySearchTree **queue = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+    int front = 0, rear = 0;
+    queue[rear++] = root;
     while (front < rear)
     {
-        Tree *node = queue[++front];
-        if (node->left != NULL)
-            queue[++rear] = node->left;
-        if (node->right != NULL)
-            queue[++rear] = node->right;
-        printf("<%d> ", node->data);
+        root = queue[front++];
+        if (root->left != NULL)
+            queue[rear++] = root->left;
+        if (root->right != NULL)
+            queue[rear++] = root->right;
+        printf("<%d> ", root->data);
     }
     free(queue);
 }
 
-void levelorderRecursive(Tree *head)
+bool isPerfect(BinarySearchTree *root)
 {
-    void printLevel(Tree * head, int level)
-    {
-        if (head == NULL)
-            return;
-        if (level == 0)
-            printf("<%d> ", head->data);
-        else
-        {
-            printLevel(head->left, level - 1);
-            printLevel(head->right, level - 1);
-        }
-    }
-    int levels = height(head, head->data);
-    for (int i = 0; i <= levels; i++)
-    {
-        printLevel(head, i);
-    }
+    int levels = height(root);
+    int nodes = size(root);
+    return (nodes == (int)pow(2, levels + 1) - 1);
 }
 
-bool isin(Tree *head, int value)
+bool isComplete(BinarySearchTree *root)
 {
-    if (head == NULL)
-        return false;
-    if (value == head->data)
+    if (root == NULL)
         return true;
-    if (value < head->data)
-        return isin(head->left, value);
+    BinarySearchTree **queue = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+    int front = 0, rear = 0;
+    bool nullFound = false;
+    queue[rear++] = root;
+    while (front < rear)
+    {
+        root = queue[front++];
+        if (root->left != NULL)
+        {
+            if (nullFound)
+            {
+                free(queue);
+                return false;
+            }
+            queue[rear++] = root->left;
+        }
+        else
+            nullFound = true;
+        if (root->right != NULL)
+        {
+            if (nullFound)
+            {
+                free(queue);
+                return false;
+            }
+            queue[rear++] = root->right;
+        }
+        else
+            nullFound = true;
+    }
+    free(queue);
+    return true;
+}
+
+bool isFull(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return true;
+    if ((root->left == NULL) ^ (root->right == NULL))
+        return false;
+    return (isFull(root->left) && isFull(root->right));
+}
+
+bool isDegenerate(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return true;
+    if (root->left != NULL && root->right != NULL)
+        return false;
+    return (isDegenerate(root->left) && isDegenerate(root->right));
+}
+
+bool isSkewed(BinarySearchTree *root)
+{
+    if (root == NULL)
+        return true;
+    if (root->left != NULL)
+    {
+        while (root != NULL)
+        {
+            if (root->right != NULL)
+                return false;
+            root = root->left;
+        }
+    }
     else
-        return isin(head->right, value);
+    {
+        while (root != NULL)
+        {
+            if (root->left != NULL)
+                return false;
+            root = root->right;
+        }
+    }
+    return true;
 }
 
-bool isFull(Tree *head)
+bool isMirror(BinarySearchTree *root1, BinarySearchTree *root2)
 {
-    if (head == NULL)
+    if (root1 == NULL && root2 == NULL)
+        return true;
+    else if (root1 == NULL || root2 == NULL)
         return false;
-    if (head->left == NULL && head->right == NULL)
-        return true;
-    return (isFull(head->left) && isFull(head->right));
-}
-
-bool isSkewed(Tree *head)
-{
-    if (head == NULL)
-        return true;
-    if (head->left != NULL && head->right != NULL)
-        return false;
-    return (isSkewed(head->left) && isSkewed(head->right));
-}
-
-bool isPerfect(Tree *head)
-{
-    int l = 1 + height(head, head->data);
-    int s = size(head);
-    return s == (int)pow(2, l) - 1;
-}
-
-bool isComplete(Tree *head)
-{
-    bool areLevelPerfect(Tree * head, int level)
-    {
-        if (head == NULL)
-            return false;
-        if (level == 0)
-            return true;
-        return areLevelPerfect(head->left, level - 1) && areLevelPerfect(head->right, level - 1);
-    }
-    int level = height(head, head->data);
-    if (level == 0)
-        return true;
-    if (!areLevelPerfect(head, level - 1))
-        return false;
-    bool flag = true;
-    int prevDegree = 3;
-    void areNodesLeft(Tree * head, int level)
-    {
-        if (flag == false)
-            return;
-        if (level == 0)
-        {
-            int currDegree = degree(head);
-            if (prevDegree < currDegree)
-                flag = false;
-            if (currDegree == 1 && prevDegree == 1)
-                flag = false;
-            if (currDegree == 1 && head->left == NULL)
-                flag = false;
-            prevDegree = currDegree;
-        }
-        else
-        {
-            areNodesLeft(head->left, level - 1);
-            areNodesLeft(head->right, level - 1);
-        }
-    }
-    areNodesLeft(head, level - 1);
-    return flag;
-}
-
-int balanceFactor(Tree *head)
-{
-    if (head == NULL)
-        return 0;
-    int getHeight(Tree * head)
-    {
-        if (head == NULL)
-            return -1;
-        return 1 + ((getHeight(head->left) >= getHeight(head->right)) ? getHeight(head->left) : getHeight(head->right));
-    }
-    return getHeight(head->left) - getHeight(head->right);
-}
-
-bool isBalanced(Tree *head)
-{
-    if (head == NULL)
-        return true;
-    bool flag = true;
-    Tree **stack = (Tree **)malloc(size(head) * sizeof(Tree *));
-    int top = -1;
-    stack[++top] = head;
-    while (top >= 0)
-    {
-        head = stack[top--];
-        int temp = abs(balanceFactor(head));
-        if (temp > 1)
-        {
-            flag = false;
-            break;
-        }
-        if (head->right != NULL)
-            stack[++top] = head->right;
-        if (head->left != NULL)
-            stack[++top] = head->left;
-    }
-    free(stack);
-    return flag;
-}
-
-Tree *rotateLeft(Tree *a)
-{
-    Tree *b = a->right;
-    Tree *c = b->right;
-    Tree *d = b->left;
-    a->right = d;
-    b->left = a;
-    return b;
-}
-
-Tree *rotateRight(Tree *a)
-{
-    Tree *b = a->left;
-    Tree *c = b->left;
-    Tree *d = b->right;
-    a->left = d;
-    b->right = a;
-    return b;
-}
-
-Tree *rotateRightLeft(Tree *a)
-{
-    Tree *b = a->right;
-    Tree *c = b->right;
-    Tree *d = b->left;
-    a->right = rotateRight(b);
-    d = rotateLeft(a);
-    return d;
-}
-
-Tree *rotateLeftRight(Tree *a)
-{
-    Tree *b = a->left;
-    Tree *c = b->left;
-    Tree *d = b->right;
-    a->left = rotateLeft(b);
-    d = rotateRight(a);
-    return d;
-}
-
-void balancedInsert(Tree **head, int value)
-{
-    Tree *prev = NULL;
-    Tree *curr = *head;
-    while (curr != NULL)
-    {
-        prev = curr;
-        if (value < curr->data)
-        {
-            curr = curr->left;
-        }
-        else if (value > curr->data)
-        {
-            curr = curr->right;
-        }
-        else
-            break;
-    }
-    if (prev == NULL)
-        *head = init(value);
-    else if (value < prev->data)
-        prev->left = init(value);
-    else if (value > prev->data)
-        prev->right = init(value);
     else
-        return;
-
-    if (!isBalanced(*head))
-    {
-        Tree *temp0 = NULL;
-        Tree *temp1 = NULL;
-        Tree *temp2 = *head;
-        int n, m;
-        m = abs(balanceFactor(temp2));
-        while (temp1 == NULL || n < 2 || m > 1)
-        {
-            if (value < temp2->data)
-            {
-                temp0 = temp1;
-                temp1 = temp2;
-                temp2 = temp2->left;
-                n = m;
-                m = abs(balanceFactor(temp2));
-            }
-            else if (value > temp2->data)
-            {
-                temp0 = temp1;
-                temp1 = temp2;
-                temp2 = temp2->right;
-                n = m;
-                m = abs(balanceFactor(temp2));
-            }
-            else
-                break;
-        }
-        if (temp1->data < value && temp2->data < value)
-        {
-            if (temp0 == NULL)
-            {
-                *head = rotateLeft(temp1);
-            }
-            else if (temp0->left == temp1)
-            {
-                temp0->left = rotateLeft(temp1);
-            }
-            else if (temp0->right == temp1)
-            {
-                temp0->right = rotateLeft(temp1);
-            }
-        }
-        else if (value < temp1->data && value < temp2->data)
-        {
-            if (temp0 == NULL)
-            {
-                *head = rotateRight(temp1);
-            }
-            else if (temp0->left == temp1)
-            {
-                temp0->left = rotateRight(temp1);
-            }
-            else if (temp0->right == temp1)
-            {
-                temp0->right = rotateRight(temp1);
-            }
-        }
-        else if (temp1->data < value && value < temp2->data)
-        {
-            if (temp0 == NULL)
-            {
-                *head = rotateRightLeft(temp1);
-            }
-            else if (temp0->left == temp1)
-            {
-                temp0->left = rotateRightLeft(temp1);
-            }
-            else if (temp0->right == temp1)
-            {
-                temp0->right = rotateRightLeft(temp1);
-            }
-        }
-        else if (value < temp1->data && temp2->data < value)
-        {
-            if (temp0 == NULL)
-            {
-                *head = rotateLeftRight(temp1);
-            }
-            else if (temp0->left == temp1)
-            {
-                temp0->left = rotateLeftRight(temp1);
-            }
-            else if (temp0->right == temp1)
-            {
-                temp0->right = rotateLeftRight(temp1);
-            }
-        }
-    }
+        return (isMirror(root1->left, root2->right) && isMirror(root1->right, root2->left));
 }
 
-void balancedDelete(Tree **head, int value)
+bool isSymmetric(BinarySearchTree *root)
 {
-    delete(head, value);
-
-    if (!isBalanced(*head))
-    {
-        Tree *temp0 = NULL;
-        Tree *temp1 = NULL;
-        Tree *temp2 = *head;
-        int n, m;
-        m = balanceFactor(temp2);
-        while (temp1 == NULL || abs(n) < 2 || abs(m) > 1)
-        {
-            if (m > 0)
-            {
-                temp0 = temp1;
-                temp1 = temp2;
-                temp2 = temp2->left;
-                n = m;
-                m = balanceFactor(temp2);
-            }
-            else if (m < 0)
-            {
-                temp0 = temp1;
-                temp1 = temp2;
-                temp2 = temp2->right;
-                n = m;
-                m = balanceFactor(temp2);
-            }
-            else
-                break;
-        }
-        if (n < -1 && m <= 0)
-        {
-            if (temp0 == NULL)
-            {
-                *head = rotateLeft(temp1);
-            }
-            else if (temp0->left == temp1)
-            {
-                temp0->left = rotateLeft(temp1);
-            }
-            else if (temp0->right == temp1)
-            {
-                temp0->right = rotateLeft(temp1);
-            }
-        }
-        else if (n > 1 && m >= 0)
-        {
-            if (temp0 == NULL)
-            {
-                *head = rotateRight(temp1);
-            }
-            else if (temp0->left == temp1)
-            {
-                temp0->left = rotateRight(temp1);
-            }
-            else if (temp0->right == temp1)
-            {
-                temp0->right = rotateRight(temp1);
-            }
-        }
-        else if (n < -1 && m > 0)
-        {
-            if (temp0 == NULL)
-            {
-                *head = rotateRightLeft(temp1);
-            }
-            else if (temp0->left == temp1)
-            {
-                temp0->left = rotateRightLeft(temp1);
-            }
-            else if (temp0->right == temp1)
-            {
-                temp0->right = rotateRightLeft(temp1);
-            }
-        }
-        else if (n > 1 && m < 0)
-        {
-            if (temp0 == NULL)
-            {
-                *head = rotateLeftRight(temp1);
-            }
-            else if (temp0->left == temp1)
-            {
-                temp0->left = rotateLeftRight(temp1);
-            }
-            else if (temp0->right == temp1)
-            {
-                temp0->right = rotateLeftRight(temp1);
-            }
-        }
-    }
+    if (root == NULL)
+        return true;
+    return isMirror(root->left, root->right);
 }
 
-Tree *avlTree(Tree *head)
+bool isBalanced(BinarySearchTree *root, int *currHeight)
 {
-    Tree *remakeTree(Tree * unbalanced, Tree * balanced)
+    if (root == NULL)
     {
-        if (unbalanced != NULL)
-        {
-            balanced = remakeTree(unbalanced->left, balanced);
-            balancedInsert(&balanced, unbalanced->data);
-            balanced = remakeTree(unbalanced->right, balanced);
-        }
-        return balanced;
+        *currHeight = -1;
+        return true;
     }
-    return remakeTree(head, NULL);
+    int leftHeight, rightHeight;
+    if (!isBalanced(root->left, &leftHeight) || !isBalanced(root->right, &rightHeight))
+        return false;
+    int balanceFactor = leftHeight - rightHeight;
+    if (abs(balanceFactor) > 1)
+        return false;
+    *currHeight = 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+    return true;
 }
 
 int main()
 {
-    Tree *head = NULL;
+    BinarySearchTree *root = NULL;
 
-    balancedInsert(&head, 3);
-    balancedInsert(&head, 5);
-    balancedInsert(&head, 2);
-    balancedInsert(&head, 4);
+    // Insertion
+    root = insert(root, 5);
+    root = insert(root, 2);
+    root = insert(root, 7);
+    root = insert(root, 1);
+    root = insert(root, 4);
+    root = insert(root, 6);
+    root = insert(root, 3);
 
-    balancedDelete(&head, 2);
-    // head=avlTree(head);
-
-    preorderIterative(head);
-    printf("\n");
-    inorderIterative(head);
-    printf("\n");
-    postorderIterative(head);
-    printf("\n");
-    levelorderIterative(head);
+    printf("Inorder: ");
+    inorder(root);
     printf("\n");
 
-    // for (int i = 0; i <= 6; i++)
-    // {
-    //     printf("%2d => %2d\n",i,balanceFactor(search(head,i)));
-    // }
+    printf("Preorder: ");
+    preorder(root);
+    printf("\n");
 
-    printf("%d isin? %d\n", 7, isin(head, 7));
-    printf("full? %d\n", isFull(head));
-    printf("skewed? %d\n", isSkewed(head));
-    printf("perfect? %d\n", isPerfect(head));
-    printf("complete? %d\n", isComplete(head));
-    printf("balanced? %d\n", isBalanced(head));
+    printf("Postorder: ");
+    postorder(root);
+    printf("\n");
+
+    printf("Levelorder: ");
+    levelorder(root);
+    printf("\n");
+
+    // Size, Height, Degree
+    printf("Size: %d\n", size(root));
+    printf("Height: %d\n", height(root));
+    printf("Degree of root: %d\n", degree(root));
+
+    // External/Internal nodes
+    printf("External nodes: %d\n", external(root));
+    printf("Internal nodes: %d\n", internal(root));
+
+    // Search, Parent, Sibling
+    printf("Search 4: %d\n", 4 == search(root, 4)->data);
+    printf("Parent of 4: %d\n", parent(root, 4)->data);
+    printf("Sibling of 4: %d\n", sibling(root, 4)->data);
+
+    // Min/Max
+    printf("Minimum: %d\n", minimum(root)->data);
+    printf("Maximum: %d\n", maximum(root)->data);
+
+    // Successor/Predecessor
+    printf("Successor of 4: %d\n", successor(root, 4)->data);
+    printf("Predecessor of 4: %d\n", predecessor(root, 4)->data);
+
+    // Ceiling / Floor
+    printf("Ceiling of 4: %d\n", ceiling(root, 4.5)->data);
+    printf("Floor of 4: %d\n", floored(root, 4.5)->data);
+
+    // LCA
+    printf("LCA of 1 and 3: %d\n", lowestCommonAncestor(root, 1, 3)->data);
+
+    // Path between nodes
+    int length;
+    int *p = path(root, 5, 5, &length);
+    printf("Path between 1 and 3: ");
+    for (int i = 0; i < length; i++)
+        printf("%d ", p[i]);
+    printf("\n");
+    free(p);
+
+    // Mirror
+    BinarySearchTree *mirrored = mirror(root);
+    printf("Inorder of mirrored tree: ");
+    inorder(mirrored);
+    printf("\n");
+
+    // Tree Properties
+    printf("Is Perfect? %d\n", isPerfect(root));
+    printf("Is Complete? %d\n", isComplete(root));
+    printf("Is Full? %d\n", isFull(root));
+    printf("Is Degenerate? %d\n", isDegenerate(root));
+    printf("Is Skewed? %d\n", isSkewed(root));
+    printf("Is Symmetric? %d\n", isSymmetric(root));
+
+    int currHeight;
+    printf("Is Balanced? %d\n", isBalanced(root, &currHeight));
+
+    // Copy
+    BinarySearchTree *copied = copy(root);
+    printf("Inorder of copied tree: ");
+    inorder(copied);
+    printf("\n");
+
+    // Clear
+    root = clear(root);
+    mirrored = clear(mirrored);
+    copied = clear(copied);
+    printf("After clearing, size of original tree: %d\n", size(root));
+
     return 0;
 }
