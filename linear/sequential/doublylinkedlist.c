@@ -34,84 +34,81 @@ DoublyLinkedList init()
     return list;
 }
 
+void clearRecursive(Node *node)
+{
+    if (node == NULL)
+        return;
+    clearRecursive(node->next);
+    free(node);
+}
+
 void clear(DoublyLinkedList *list)
 {
-    Node *tempPrev = NULL;
-    Node *tempCurr = list->head;
-    while (tempCurr != NULL)
-    {
-        tempPrev = tempCurr;
-        tempCurr = tempCurr->next;
-        free(tempPrev);
-    }
+    clearRecursive(list->head);
     list->head = NULL;
     list->tail = NULL;
     list->length = 0;
 }
 
-DoublyLinkedList copy(DoublyLinkedList list)
+Node *copyRecursive(Node *node, Node *prevNode, Node **tailNode)
 {
-    DoublyLinkedList new = init();
-    if (list.head == NULL)
-        return new;
-    while (list.head != NULL)
+    if (node == NULL)
     {
-        Node *temp = create(list.head->data);
-        if (new.head == NULL)
-        {
-            new.head = temp;
-            new.tail = temp;
-        }
-        else
-        {
-            new.tail->next = temp;
-            temp->prev = new.tail;
-            new.tail = temp;
-        }
-        list.head = list.head->next;
+        *tailNode = prevNode;
+        return NULL;
     }
-    new.length = list.length;
-    return new;
+    Node *newNode = create(node->data);
+    newNode->prev = prevNode;
+    newNode->next = copyRecursive(node->next, newNode, tailNode);
+    return newNode;
 }
 
-Node *search(DoublyLinkedList list, int value)
+DoublyLinkedList copy(DoublyLinkedList list)
 {
-    while (list.head != NULL)
-    {
-        if (list.head->data == value)
-            return list.head;
-        list.head = list.head->next;
-    }
-    return NULL;
+    DoublyLinkedList newList = init();
+    newList.head = copyRecursive(list.head, NULL, &newList.tail);
+    newList.length = list.length;
+    return newList;
 }
 
 void reverse(DoublyLinkedList *list)
 {
     if (list->head == NULL || list->head == list->tail)
         return;
-    Node *oldHead = list->head;
-    Node *oldTail = list->tail;
-    Node *tempPrev = NULL;
-    Node *tempCurr = list->head;
-    while (tempCurr != NULL)
+    Node *temp = NULL;
+    Node *currNode = list->head;
+    while (currNode != NULL)
     {
-        Node *tempNext = tempCurr->next;
-        tempCurr->prev = tempNext;
-        tempCurr->next = tempPrev;
-        tempPrev = tempCurr;
-        tempCurr = tempNext;
+        temp = currNode->prev;
+        currNode->prev = currNode->next;
+        currNode->next = temp;
+        currNode = currNode->prev;
     }
-    list->head = oldTail;
-    list->tail = oldHead;
+    temp = list->head;
+    list->head = list->tail;
+    list->tail = temp;
+}
+
+Node *search(DoublyLinkedList list, int value)
+{
+    Node *temp = list.head;
+    while (temp != NULL)
+    {
+        if (temp->data == value)
+            return temp;
+        temp = temp->next;
+    }
+    return NULL;
 }
 
 void traverse(DoublyLinkedList list)
 {
-    while (list.head != NULL)
+    Node *temp = list.head;
+    while (temp != NULL)
     {
-        printf("[%d] ", list.head->data);
-        list.head = list.head->next;
-        printf((list.head != NULL) ? "<=> " : "\n");
+        printf("[%d]", temp->data);
+        temp = temp->next;
+        printf((temp == NULL) ? "\n" : " <=> ");
     }
 }
 
@@ -153,35 +150,36 @@ void insertAtIndex(DoublyLinkedList *list, int value, int index)
         return insertAtEnd(list, value);
     Node *node = create(value);
     list->length++;
-    Node *tempNext = list->head;
-    for (int i = 0; i < index; i++)
-        tempNext = tempNext->next;
-    Node *tempPrev = tempNext->prev;
-    tempPrev->next = node;
-    node->prev = tempPrev;
-    node->next = tempNext;
-    tempNext->prev = node;
+    Node *temp = list->head;
+    for (int i = 0; i < index - 1; i++)
+        temp = temp->next;
+    node->next = temp->next;
+    temp->next->prev = node;
+    node->prev = temp;
+    temp->next = node;
 }
 
-void insertAfterValue(DoublyLinkedList *list, int new, int old)
+int insertAfterValue(DoublyLinkedList *list, int new, int old)
 {
-    Node *tempPrev = search(*list, old);
-    if (tempPrev == NULL)
-        return;
+    if (list->head == NULL)
+        return -1;
+    Node *temp;
+    if (list->tail->data == old)
+        temp = list->tail;
+    else
+        temp = search(*list, old);
+    if (temp == NULL)
+        return -1;
     Node *node = create(new);
     list->length++;
-    Node *tempNext = tempPrev->next;
-    node->prev = tempPrev;
-    tempPrev->next = node;
-    if (tempPrev != list->tail)
-    {
-        tempNext->prev = node;
-        node->next = tempNext;
-    }
-    else
-    {
+    node->next = temp->next;
+    if (temp == list->tail)
         list->tail = node;
-    }
+    else
+        temp->next->prev = node;
+    node->prev = temp;
+    temp->next = node;
+    return 0;
 }
 
 int deleteStart(DoublyLinkedList *list)
@@ -197,11 +195,11 @@ int deleteStart(DoublyLinkedList *list)
         list->tail = NULL;
         return value;
     }
-    Node *temp = list->head;
+    Node *target = list->head;
+    int value = target->data;
     list->head = list->head->next;
     list->head->prev = NULL;
-    int value = temp->data;
-    free(temp);
+    free(target);
     return value;
 }
 
@@ -218,11 +216,11 @@ int deleteEnd(DoublyLinkedList *list)
         list->tail = NULL;
         return value;
     }
-    Node *temp = list->tail;
+    Node *target = list->tail;
+    int value = target->data;
     list->tail = list->tail->prev;
     list->tail->next = NULL;
-    int value = temp->data;
-    free(temp);
+    free(target);
     return value;
 }
 
@@ -235,15 +233,13 @@ int deleteIndex(DoublyLinkedList *list, int index)
     if (index >= list->length - 1)
         return deleteEnd(list);
     list->length--;
-    Node *tempCurr = list->head;
+    Node *temp = list->head;
     for (int i = 0; i < index; i++)
-        tempCurr = tempCurr->next;
-    Node *tempPrev = tempCurr->prev;
-    Node *tempNext = tempCurr->next;
-    tempPrev->next = tempNext;
-    tempNext->prev = tempPrev;
-    int value = tempCurr->data;
-    free(tempCurr);
+        temp = temp->next;
+    temp->prev->next = temp->next;
+    temp->next->prev = temp->prev;
+    int value = temp->data;
+    free(temp);
     return value;
 }
 
@@ -251,41 +247,17 @@ int deleteValue(DoublyLinkedList *list, int value)
 {
     if (list->head == NULL)
         return -1;
-    if (list->head == list->tail)
-    {
-        if (list->head->data == value)
-        {
-            free(list->head);
-            list->length--;
-            list->head = NULL;
-            list->tail = NULL;
-            return value;
-        }
+    if (list->head->data == value)
+        return (deleteStart(list) == -1) ? -1 : 0;
+    if (list->tail->data == value)
+        return (deleteEnd(list) == -1) ? -1 : 0;
+    Node *temp = search(*list, value);
+    if (temp == NULL)
         return -1;
-    }
-    Node *tempCurr = search(*list, value);
-    if (tempCurr == NULL)
-        return -1;
-    list->length--;
-    Node *tempPrev = tempCurr->prev;
-    Node *tempNext = tempCurr->next;
-    if (tempCurr == list->head)
-    {
-        list->head = tempNext;
-        tempNext->prev = NULL;
-    }
-    else if (tempCurr == list->tail)
-    {
-        list->tail = tempPrev;
-        tempPrev->next = NULL;
-    }
-    else
-    {
-        tempPrev->next = tempNext;
-        tempNext->prev = tempPrev;
-    }
-    free(tempCurr);
-    return value;
+    temp->prev->next = temp->next;
+    temp->next->prev = temp->prev;
+    free(temp);
+    return 0;
 }
 
 int main()
@@ -304,11 +276,11 @@ int main()
 
     reverse(&head);
     traverse(head);
-    
+
     deleteStart(&head);
     deleteEnd(&head);
-    deleteIndex(&head,0);
-    deleteValue(&head,22);
+    deleteIndex(&head, 0);
+    deleteValue(&head, 22);
     traverse(head);
 
     return 0;

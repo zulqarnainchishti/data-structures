@@ -144,11 +144,11 @@ int depth(BinarySearchTree *root, int value)
     {
         if (value == root->data)
             return level;
-        level++;
-        if (value < root->data)
+        else if (value < root->data)
             root = root->left;
         else
             root = root->right;
+        level++;
     }
     return -1;
 }
@@ -318,18 +318,15 @@ BinarySearchTree *lowestCommonAncestor(BinarySearchTree *root, int value1, int v
         return root;
 }
 
-int *path(BinarySearchTree *root, int value1, int value2, int *length)
+void path(BinarySearchTree *root, int value1, int value2)
 {
     if (search(root, value1) == NULL || search(root, value2) == NULL)
-    {
-        *length = 0;
-        return NULL;
-    }
+        return;
     BinarySearchTree *lca = lowestCommonAncestor(root, value1, value2);
     int dist1 = depth(lca, value1);
     int dist2 = depth(lca, value2);
-    *length = dist1 + dist2 + 1;
-    int *sequence = (int *)malloc((*length) * sizeof(int));
+    int length = dist1 + dist2 + 1;
+    int sequence[length];
     BinarySearchTree *temp1 = lca;
     for (int i = dist1 - 1; i >= 0; i--)
     {
@@ -349,7 +346,8 @@ int *path(BinarySearchTree *root, int value1, int value2, int *length)
             temp2 = temp2->right;
         sequence[dist1 + i] = temp2->data;
     }
-    return sequence;
+    for (int i = 0; i < length; i++)
+        printf("<%d> ", sequence[i]);
 }
 
 void preorder(BinarySearchTree *root)
@@ -403,7 +401,8 @@ void postorder(BinarySearchTree *root)
 // {
 //     if (root == NULL)
 //         return;
-//     BinarySearchTree **stack = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+//     int nodes = size(root);
+//     BinarySearchTree *stack[nodes];
 //     int top = 0;
 //     stack[top++] = root;
 //     while (top > 0)
@@ -415,14 +414,14 @@ void postorder(BinarySearchTree *root)
 //         if (root->left != NULL)
 //             stack[top++] = root->left;
 //     }
-//     free(stack);
 // }
 
 // void inorder(BinarySearchTree *root)
 // {
 //     if (root == NULL)
 //         return;
-//     BinarySearchTree **stack = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+//     int nodes = size(root);
+//     BinarySearchTree *stack[nodes];
 //     int top = 0;
 //     while (root != NULL || top > 0)
 //     {
@@ -435,7 +434,6 @@ void postorder(BinarySearchTree *root)
 //         printf("<%d> ", root->data);
 //         root = root->right;
 //     }
-//     free(stack);
 // }
 
 // void postorder(BinarySearchTree *root)
@@ -443,8 +441,8 @@ void postorder(BinarySearchTree *root)
 //     if (root == NULL)
 //         return;
 //     int nodes = size(root);
-//     BinarySearchTree **stack1 = (BinarySearchTree **)malloc(nodes * sizeof(BinarySearchTree *));
-//     BinarySearchTree **stack2 = (BinarySearchTree **)malloc(nodes * sizeof(BinarySearchTree *));
+//     BinarySearchTree *stack1[nodes];
+//     BinarySearchTree *stack2[nodes];
 //     int top1 = 0, top2 = 0;
 //     stack1[top1++] = root;
 //     while (top1 > 0)
@@ -461,15 +459,14 @@ void postorder(BinarySearchTree *root)
 //         root = stack2[--top2];
 //         printf("<%d> ", root->data);
 //     }
-//     free(stack1);
-//     free(stack2);
 // }
 
 void levelorder(BinarySearchTree *root)
 {
     if (root == NULL)
         return;
-    BinarySearchTree **queue = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+    int nodes = size(root);
+    BinarySearchTree *queue[nodes];
     int front = 0, rear = 0;
     queue[rear++] = root;
     while (front < rear)
@@ -481,7 +478,6 @@ void levelorder(BinarySearchTree *root)
             queue[rear++] = root->right;
         printf("<%d> ", root->data);
     }
-    free(queue);
 }
 
 bool isPerfect(BinarySearchTree *root)
@@ -495,7 +491,8 @@ bool isComplete(BinarySearchTree *root)
 {
     if (root == NULL)
         return true;
-    BinarySearchTree **queue = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+    int nodes = size(root);
+    BinarySearchTree *queue[nodes];
     int front = 0, rear = 0;
     bool nullFound = false;
     queue[rear++] = root;
@@ -525,7 +522,6 @@ bool isComplete(BinarySearchTree *root)
         else
             nullFound = true;
     }
-    free(queue);
     return true;
 }
 
@@ -572,21 +568,21 @@ bool isSkewed(BinarySearchTree *root)
     return true;
 }
 
-bool isMirror(BinarySearchTree *root1, BinarySearchTree *root2)
+bool areMirrored(BinarySearchTree *root1, BinarySearchTree *root2)
 {
     if (root1 == NULL && root2 == NULL)
         return true;
     else if (root1 == NULL || root2 == NULL)
         return false;
     else
-        return (isMirror(root1->left, root2->right) && isMirror(root1->right, root2->left));
+        return (areMirrored(root1->left, root2->right) && areMirrored(root1->right, root2->left));
 }
 
 bool isSymmetric(BinarySearchTree *root)
 {
     if (root == NULL)
         return true;
-    return isMirror(root->left, root->right);
+    return areMirrored(root->left, root->right);
 }
 
 bool isBalanced(BinarySearchTree *root, int *currHeight)
@@ -665,13 +661,9 @@ int main()
     printf("LCA of 1 and 3: %d\n", lowestCommonAncestor(root, 1, 3)->data);
 
     // Path between nodes
-    int length;
-    int *p = path(root, 5, 5, &length);
-    printf("Path between 1 and 3: ");
-    for (int i = 0; i < length; i++)
-        printf("%d ", p[i]);
+    printf("Path between 6 and 3: ");
+    path(root, 6, 3);
     printf("\n");
-    free(p);
 
     // Mirror
     BinarySearchTree *mirrored = mirror(root);

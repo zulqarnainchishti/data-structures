@@ -30,89 +30,93 @@ LinkedList init()
     return list;
 }
 
+void clearRecursive(Node *node)
+{
+    if (node == NULL)
+        return;
+    clearRecursive(node->next);
+    free(node);
+}
+
 void clear(LinkedList *list)
 {
-    Node *tempPrev = NULL;
-    Node *tempNext = list->head;
-    while (tempNext != NULL)
-    {
-        tempPrev = tempNext;
-        tempNext = tempNext->next;
-        free(tempPrev);
-    }
+    clearRecursive(list->head);
     list->head = NULL;
     list->length = 0;
 }
 
-LinkedList copy(LinkedList list)
+Node *copyRecursive(Node *node)
 {
-    LinkedList new = init();
-    new.length=list.length;
-    Node *temp;
-    while (list.head != NULL)
-    {
-        if (new.head == NULL)
-        {
-            new.head = create(list.head->data);
-            temp = new.head;
-        }
-        else
-        {
-            temp->next = create(list.head->data);
-            temp = temp->next;
-        }
-        list.head = list.head->next;
-    }
-    return new;
+    if (node == NULL)
+        return NULL;
+    Node *newNode = create(node->data);
+    newNode->next = copyRecursive(node->next);
+    return newNode;
 }
 
-Node *search(LinkedList list, int value)
+LinkedList copy(LinkedList list)
 {
-    while (list.head != NULL)
-    {
-        if (list.head->data == value)
-            return list.head;
-        list.head = list.head->next;
-    }
-    return NULL;
+    LinkedList newList = init();
+    newList.head = copyRecursive(list.head);
+    newList.length = list.length;
+    return newList;
 }
 
 void reverse(LinkedList *list)
 {
-    Node *tempPrev = NULL;
-    Node *tempCurr = list->head;
-    Node *tempNext;
-    while (tempCurr != NULL)
+    Node *prevNode = NULL;
+    Node *currNode = list->head;
+    Node *nextNode;
+    while (currNode != NULL)
     {
-        tempNext = tempCurr->next;
-        tempCurr->next = tempPrev;
-        tempPrev = tempCurr;
-        tempCurr = tempNext;
+        nextNode = currNode->next;
+        currNode->next = prevNode;
+        prevNode = currNode;
+        currNode = nextNode;
     }
-    list->head = tempPrev;
+    list->head = prevNode;
+}
+
+Node *search(LinkedList list, int value)
+{
+    Node *temp = list.head;
+    while (temp != NULL)
+    {
+        if (temp->data == value)
+            return temp;
+        temp = temp->next;
+    }
+    return NULL;
 }
 
 void traverse(LinkedList list)
 {
-    while (list.head != NULL)
+    Node *temp = list.head;
+    while (temp != NULL)
     {
-        printf("[%d]", list.head->data);
-        list.head = list.head->next;
-        printf((list.head != NULL) ? " -> " : "\n");
+        printf("[%d]", temp->data);
+        temp = temp->next;
+        printf((temp == NULL) ? "\n" : " -> ");
     }
 }
 
 void insertAtStart(LinkedList *list, int value)
 {
     Node *node = create(value);
+    list->length++;
+    if (list->head == NULL)
+    {
+        list->head = node;
+        return;
+    }
     node->next = list->head;
     list->head = node;
-    list->length++;
 }
 
 void insertAtEnd(LinkedList *list, int value)
 {
     Node *node = create(value);
+    list->length++;
     if (list->head == NULL)
     {
         list->head = node;
@@ -122,7 +126,6 @@ void insertAtEnd(LinkedList *list, int value)
     while (temp->next != NULL)
         temp = temp->next;
     temp->next = node;
-    list->length++;
 }
 
 void insertAtIndex(LinkedList *list, int value, int index)
@@ -132,34 +135,42 @@ void insertAtIndex(LinkedList *list, int value, int index)
     if (index >= list->length)
         return insertAtEnd(list, value);
     Node *node = create(value);
+    list->length++;
     Node *temp = list->head;
-    for (int i = 1; i < index; i++)
+    for (int i = 0; i < index - 1; i++)
         temp = temp->next;
     node->next = temp->next;
     temp->next = node;
-    list->length++;
 }
 
-void insertAfterValue(LinkedList *list, int new, int old)
+int insertAfterValue(LinkedList *list, int new, int old)
 {
     Node *temp = search(*list, old);
     if (temp == NULL)
-        return;
+        return -1;
     Node *node = create(new);
+    list->length++;
     node->next = temp->next;
     temp->next = node;
-    list->length++;
+    return 0;
 }
 
 int deleteStart(LinkedList *list)
 {
     if (list->head == NULL)
         return -1;
-    Node *tempCurr = list->head;
-    list->head = list->head->next;
     list->length--;
-    int value = tempCurr->data;
-    free(tempCurr);
+    if (list->head->next == NULL)
+    {
+        int value = list->head->data;
+        free(list->head);
+        list->head = NULL;
+        return value;
+    }
+    Node *target = list->head;
+    int value = target->data;
+    list->head = target->next;
+    free(target);
     return value;
 }
 
@@ -167,20 +178,21 @@ int deleteEnd(LinkedList *list)
 {
     if (list->head == NULL)
         return -1;
-    Node *tempPrev = NULL;
-    Node *tempCurr = list->head;
-    while (tempCurr->next != NULL)
-    {
-        tempPrev = tempCurr;
-        tempCurr = tempCurr->next;
-    }
-    if (tempPrev == NULL)
-        list->head = NULL;
-    else
-        tempPrev->next = NULL;
-    int value = tempCurr->data;
-    free(tempCurr);
     list->length--;
+    if (list->head->next == NULL)
+    {
+        int value = list->head->data;
+        free(list->head);
+        list->head = NULL;
+        return value;
+    }
+    Node *temp = list->head;
+    while (temp->next->next != NULL)
+        temp = temp->next;
+    Node *target = temp->next;
+    int value = target->data;
+    temp->next = NULL;
+    free(target);
     return value;
 }
 
@@ -192,17 +204,14 @@ int deleteIndex(LinkedList *list, int index)
         return deleteStart(list);
     if (index >= list->length - 1)
         return deleteEnd(list);
-    Node *tempPrev = NULL;
-    Node *tempCurr = list->head;
-    for (int i = 0; i < index; i++)
-    {
-        tempPrev = tempCurr;
-        tempCurr = tempCurr->next;
-    }
-    tempPrev->next = tempCurr->next;
-    int value = tempCurr->data;
-    free(tempCurr);
     list->length--;
+    Node *temp = list->head;
+    for (int i = 0; i < index - 1; i++)
+        temp = temp->next;
+    Node *target = temp->next;
+    int value = target->data;
+    temp->next = target->next;
+    free(target);
     return value;
 }
 
@@ -210,52 +219,116 @@ int deleteValue(LinkedList *list, int value)
 {
     if (list->head == NULL)
         return -1;
-    Node *tempPrev = NULL;
-    Node *tempCurr = list->head;
-    while (tempCurr != NULL && tempCurr->data != value)
+    if (list->head->data == value)
     {
-        tempPrev = tempCurr;
-        tempCurr = tempCurr->next;
+        Node *target = list->head;
+        list->head = list->head->next;
+        free(target);
+        list->length--;
+        return 0;
     }
-    if (tempCurr == NULL)
-        return -1;
-    if (tempPrev == NULL)
-        list->head = tempCurr->next;
-    else
-        tempPrev->next = tempCurr->next;
-    free(tempCurr);
-    list->length--;
-    return value;
+    Node *prevNode = list->head;
+    Node *currNode = list->head->next;
+    while (currNode != NULL)
+    {
+        if (currNode->data == value)
+        {
+            prevNode->next = currNode->next;
+            free(currNode);
+            list->length--;
+            return 0;
+        }
+        prevNode = currNode;
+        currNode = currNode->next;
+    }
+    return -1;
 }
 
 int main()
 {
     LinkedList list = init();
 
-    insertAtEnd(&list, 33);
-    insertAtEnd(&list, 44);
-    insertAtStart(&list, 22);
-    insertAtStart(&list, 11);
-    insertAtIndex(&list, 55, 0);
-    insertAtIndex(&list, 66, 10);
-    insertAfterValue(&list, 77, 55);
-    insertAfterValue(&list, 88, 22);
-    insertAfterValue(&list, 99, 66);
+    printf("Initial list:\n");
     traverse(list);
 
-    deleteValue(&list, 99);
+    // Insertion at start
+    insertAtStart(&list, 30);
+    insertAtStart(&list, 20);
+    insertAtStart(&list, 10);
+    printf("After insertAtStart 10, 20, 30:\n");
     traverse(list);
+
+    // Insertion at end
+    insertAtEnd(&list, 40);
+    insertAtEnd(&list, 50);
+    printf("After insertAtEnd 40, 50:\n");
+    traverse(list);
+
+    // Insertion at index
+    insertAtIndex(&list, 25, 2); // Insert 25 at index 2
+    printf("After insertAtIndex 25 at index 2:\n");
+    traverse(list);
+
+    // Insertion after value
+    if (insertAfterValue(&list, 35, 30) == 0)
+        printf("After insertAfterValue 35 after 30:\n");
+    else
+        printf("Value 30 not found\n");
+    traverse(list);
+
+    // Search existing and non-existing values
+    Node *found = search(list, 40);
+    printf("Search 40: %s\n", (found != NULL) ? "Found" : "Not found");
+    found = search(list, 99);
+    printf("Search 99: %s\n", (found != NULL) ? "Found" : "Not found");
+
+    // Deletion at start
     deleteStart(&list);
-    traverse(list);
-    deleteEnd(&list);
-    traverse(list);
-    deleteIndex(&list,3);
-    traverse(list);
-    reverse(&list);
+    printf("After deleteStart:\n");
     traverse(list);
 
-    LinkedList new=copy(list);
-    traverse(new);
+    // Deletion at end
+    deleteEnd(&list);
+    printf("After deleteEnd:\n");
+    traverse(list);
+
+    // Deletion at index
+    deleteIndex(&list, 2); // Should remove element at index 2
+    printf("After deleteIndex at 2:\n");
+    traverse(list);
+
+    // Deletion by value (existing)
+    if (deleteValue(&list, 35) == 0)
+        printf("After deleteValue 35:\n");
+    else
+        printf("Value 35 not found\n");
+    traverse(list);
+
+    // Deletion by value (non-existing)
+    if (deleteValue(&list, 999) == 0)
+        printf("After deleteValue 999:\n");
+    else
+        printf("Value 999 not found\n");
+    traverse(list);
+
+    // Copying the list
+    LinkedList copiedList = copy(list);
+    printf("Copied list:\n");
+    traverse(copiedList);
+
+    // Reversing the original list
+    reverse(&list);
+    printf("After reverse (original list):\n");
+    traverse(list);
+
+    // Clearing both lists
+    clear(&list);
+    clear(&copiedList);
+    printf("After clearing both lists:\n");
+    printf("Original: ");
+    traverse(list);
+    printf("Copied: ");
+    traverse(copiedList);
 
     return 0;
 }

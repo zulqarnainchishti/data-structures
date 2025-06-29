@@ -14,7 +14,7 @@ typedef enum
 typedef struct
 {
     int key;
-    Status flag;
+    Status status;
 } Node;
 
 typedef struct Set
@@ -29,7 +29,7 @@ Set init(int capacity)
     Set set;
     set.buckets = (Node *)malloc(capacity * sizeof(Node));
     for (int i = 0; i < capacity; i++)
-        set.buckets[i].flag = EMPTY;
+        set.buckets[i].status = EMPTY;
     set.size = capacity;
     set.length = 0;
     return set;
@@ -41,8 +41,8 @@ Set copy(Set set)
     new.buckets = (Node *)malloc(set.size * sizeof(Node));
     for (int i = 0; i < set.size; i++)
     {
-        new.buckets[i].flag = set.buckets[i].flag;
-        if (set.buckets[i].flag == OCCUPIED)
+        new.buckets[i].status = set.buckets[i].status;
+        if (set.buckets[i].status == OCCUPIED)
             new.buckets[i].key = set.buckets[i].key;
     }
     new.size = set.size;
@@ -53,7 +53,7 @@ Set copy(Set set)
 void clear(Set *set)
 {
     for (int i = 0; i < set->size; i++)
-        set->buckets[i].flag = EMPTY;
+        set->buckets[i].status = EMPTY;
     set->length = 0;
 }
 
@@ -98,19 +98,19 @@ void resize(Set *set)
         int newSize = set->size * 2;
         Node *newBuckets = (Node *)malloc(newSize * sizeof(Node));
         for (int i = 0; i < newSize; i++)
-            newBuckets[i].flag = EMPTY;
+            newBuckets[i].status = EMPTY;
         for (int i = 0; i < set->size; i++)
         {
-            if (set->buckets[i].flag == OCCUPIED)
+            if (set->buckets[i].status == OCCUPIED)
             {
                 int key = set->buckets[i].key;
                 for (int j = 0; j < newSize; j++)
                 {
                     int index = hashFunction(key, newSize, j);
-                    if (newBuckets[index].flag == EMPTY)
+                    if (newBuckets[index].status == EMPTY)
                     {
                         newBuckets[index].key = key;
-                        newBuckets[index].flag = OCCUPIED;
+                        newBuckets[index].status = OCCUPIED;
                         break;
                     }
                 }
@@ -127,9 +127,9 @@ bool contains(Set set, int key)
     for (int i = 0; i < set.size; i++)
     {
         int index = hashFunction(key, set.size, i);
-        if (set.buckets[index].flag == EMPTY)
+        if (set.buckets[index].status == EMPTY)
             return false;
-        else if (set.buckets[index].flag == OCCUPIED)
+        else if (set.buckets[index].status == OCCUPIED)
             if (set.buckets[index].key == key)
                 return true;
     }
@@ -141,11 +141,11 @@ void insert(Set *set, int key)
     for (int i = 0; i < set->size; i++)
     {
         int index = hashFunction(key, set->size, i);
-        if (set->buckets[index].flag == OCCUPIED && set->buckets[index].key == key)
+        if (set->buckets[index].status == OCCUPIED && set->buckets[index].key == key)
             return;
-        if (set->buckets[index].flag == EMPTY || set->buckets[index].flag == DELETED)
+        if (set->buckets[index].status == EMPTY || set->buckets[index].status == DELETED)
         {
-            set->buckets[index].flag = OCCUPIED;
+            set->buckets[index].status = OCCUPIED;
             set->buckets[index].key = key;
             set->length++;
             resize(set);
@@ -159,11 +159,11 @@ void discard(Set *set, int key)
     for (int i = 0; i < set->size; i++)
     {
         int index = hashFunction(key, set->size, i);
-        if (set->buckets[index].flag == EMPTY)
+        if (set->buckets[index].status == EMPTY)
             return;
-        if (set->buckets[index].flag == OCCUPIED && set->buckets[index].key == key)
+        if (set->buckets[index].status == OCCUPIED && set->buckets[index].key == key)
         {
-            set->buckets[index].flag = DELETED;
+            set->buckets[index].status = DELETED;
             set->length--;
             return;
         }
@@ -175,7 +175,7 @@ void traverse(Set set)
     printf("{");
     for (int i = 0; i < set.size; i++)
     {
-        if (set.buckets[i].flag == OCCUPIED)
+        if (set.buckets[i].status == OCCUPIED)
             printf(" %d", set.buckets[i].key);
     }
     printf(" } : %.2f\n", loadFactor(set));
@@ -185,10 +185,10 @@ Set unionOf(Set set1, Set set2)
 {
     Set result = init(set1.size + set2.size);
     for (int i = 0; i < set1.size; i++)
-        if (set1.buckets[i].flag == OCCUPIED)
+        if (set1.buckets[i].status == OCCUPIED)
             insert(&result, set1.buckets[i].key);
     for (int i = 0; i < set2.size; i++)
-        if (set2.buckets[i].flag == OCCUPIED)
+        if (set2.buckets[i].status == OCCUPIED)
             insert(&result, set2.buckets[i].key);
     return result;
 }
@@ -197,7 +197,7 @@ Set intersectionOf(Set set1, Set set2)
 {
     Set result = init(set1.size < set2.size ? set1.size : set2.size);
     for (int i = 0; i < set1.size; i++)
-        if (set1.buckets[i].flag == OCCUPIED && contains(set2, set1.buckets[i].key))
+        if (set1.buckets[i].status == OCCUPIED && contains(set2, set1.buckets[i].key))
             insert(&result, set1.buckets[i].key);
     return result;
 }
@@ -206,7 +206,7 @@ Set differenceOf(Set set1, Set set2)
 {
     Set result = init(set1.size);
     for (int i = 0; i < set1.size; i++)
-        if (set1.buckets[i].flag == OCCUPIED && !contains(set2, set1.buckets[i].key))
+        if (set1.buckets[i].status == OCCUPIED && !contains(set2, set1.buckets[i].key))
             insert(&result, set1.buckets[i].key);
     return result;
 }
@@ -215,10 +215,10 @@ Set symmetricDifferenceOf(Set set1, Set set2)
 {
     Set result = init(set1.size + set2.size);
     for (int i = 0; i < set1.size; i++)
-        if (set1.buckets[i].flag == OCCUPIED && !contains(set2, set1.buckets[i].key))
+        if (set1.buckets[i].status == OCCUPIED && !contains(set2, set1.buckets[i].key))
             insert(&result, set1.buckets[i].key);
     for (int i = 0; i < set2.size; i++)
-        if (set2.buckets[i].flag == OCCUPIED && !contains(set1, set2.buckets[i].key))
+        if (set2.buckets[i].status == OCCUPIED && !contains(set1, set2.buckets[i].key))
             insert(&result, set2.buckets[i].key);
     return result;
 }
@@ -228,7 +228,7 @@ bool isEqual(Set set1, Set set2)
     if (set1.length != set2.length)
         return false;
     for (int i = 0; i < set1.size; i++)
-        if (set1.buckets[i].flag == OCCUPIED && !contains(set2, set1.buckets[i].key))
+        if (set1.buckets[i].status == OCCUPIED && !contains(set2, set1.buckets[i].key))
             return false;
     return true;
 }
@@ -238,7 +238,7 @@ bool isSubset(Set subset, Set set)
     if (subset.length > set.length)
         return false;
     for (int i = 0; i < subset.size; i++)
-        if (subset.buckets[i].flag == OCCUPIED && !contains(set, subset.buckets[i].key))
+        if (subset.buckets[i].status == OCCUPIED && !contains(set, subset.buckets[i].key))
             return false;
     return true;
 }
@@ -248,7 +248,7 @@ bool isProperSubset(Set subset, Set set)
     if (subset.length >= set.length)
         return false;
     for (int i = 0; i < subset.size; i++)
-        if (subset.buckets[i].flag == OCCUPIED && !contains(set, subset.buckets[i].key))
+        if (subset.buckets[i].status == OCCUPIED && !contains(set, subset.buckets[i].key))
             return false;
     return true;
 }
@@ -266,7 +266,7 @@ bool isProperSuperset(Set superset, Set set)
 bool isDisjoint(Set set1, Set set2)
 {
     for (int i = 0; i < set1.size; i++)
-        if (set1.buckets[i].flag == OCCUPIED && contains(set2, set1.buckets[i].key))
+        if (set1.buckets[i].status == OCCUPIED && contains(set2, set1.buckets[i].key))
             return false;
     return true;
 }
@@ -276,11 +276,11 @@ void describe(Set set)
     for (int i = 0; i < set.size; i++)
     {
         printf("%2d | ", i);
-        if (set.buckets[i].flag == EMPTY)
+        if (set.buckets[i].status == EMPTY)
             printf("EMP\n");
-        else if (set.buckets[i].flag == OCCUPIED)
+        else if (set.buckets[i].status == OCCUPIED)
             printf("%d\n", set.buckets[i].key);
-        else if (set.buckets[i].flag == DELETED)
+        else if (set.buckets[i].status == DELETED)
             printf("DEL\n");
     }
 }
@@ -295,12 +295,14 @@ int main()
     insert(&A, 10);
     insert(&A, 20);
     insert(&A, 30);
-    printf("Set A: "); traverse(A);
+    printf("Set A: ");
+    traverse(A);
 
     // Insert elements into Set B
     insert(&B, 20);
     insert(&B, 40);
-    printf("Set B: "); traverse(B);
+    printf("Set B: ");
+    traverse(B);
 
     // Test contains
     printf("Does A contain 10? %s\n", contains(A, 10) ? "Yes" : "No");
@@ -308,23 +310,28 @@ int main()
 
     // Test discard
     discard(&A, 20);
-    printf("Set A after removing 20: "); traverse(A);
+    printf("Set A after removing 20: ");
+    traverse(A);
 
     // Test union
     Set U = unionOf(A, B);
-    printf("Union of A and B: "); traverse(U);
+    printf("Union of A and B: ");
+    traverse(U);
 
     // Test intersection
     Set I = intersectionOf(A, B);
-    printf("Intersection of A and B: "); traverse(I);
+    printf("Intersection of A and B: ");
+    traverse(I);
 
     // Test difference
     Set D = differenceOf(A, B);
-    printf("Difference A - B: "); traverse(D);
+    printf("Difference A - B: ");
+    traverse(D);
 
     // Test symmetric difference
     Set SD = symmetricDifferenceOf(A, B);
-    printf("Symmetric difference of A and B: "); traverse(SD);
+    printf("Symmetric difference of A and B: ");
+    traverse(SD);
 
     // Test equality
     printf("Are A and B equal? %s\n", isEqual(A, B) ? "Yes" : "No");
@@ -345,11 +352,13 @@ int main()
 
     // Test copy
     Set AC = copy(A);
-    printf("Copy of A: "); traverse(AC);
+    printf("Copy of A: ");
+    traverse(AC);
 
     // Test clear
     clear(&AC);
-    printf("Cleared copy of A: "); traverse(AC);
+    printf("Cleared copy of A: ");
+    traverse(AC);
 
     // Test describe
     printf("\nInternal structure of Set A:\n");
