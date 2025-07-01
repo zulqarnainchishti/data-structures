@@ -464,10 +464,7 @@ bool isComplete(AVLTree *root)
         if (root->left != NULL)
         {
             if (nullFound)
-            {
-                free(queue);
                 return false;
-            }
             queue[rear++] = root->left;
         }
         else
@@ -475,16 +472,12 @@ bool isComplete(AVLTree *root)
         if (root->right != NULL)
         {
             if (nullFound)
-            {
-                free(queue);
                 return false;
-            }
             queue[rear++] = root->right;
         }
         else
             nullFound = true;
     }
-    free(queue);
     return true;
 }
 
@@ -534,20 +527,8 @@ AVLTree *rightRotate(AVLTree *x)
     return y;
 }
 
-AVLTree *insert(AVLTree *root, int value)
+AVLTree *rebalance(AVLTree *root)
 {
-    if (root == NULL)
-    {
-        AVLTree *node = init(value);
-        return node;
-    }
-    if (value < root->data)
-        root->left = insert(root->left, value);
-    else if (value > root->data)
-        root->right = insert(root->right, value);
-    else
-        return root;
-    root->height = 1 + ((height(root->left) > height(root->right)) ? height(root->left) : height(root->right));
     int balanceFactor = balance(root);
     if (balanceFactor > 1) // Left Heavy
     {
@@ -570,6 +551,23 @@ AVLTree *insert(AVLTree *root, int value)
         }
     }
     return root;
+}
+
+AVLTree *insert(AVLTree *root, int value)
+{
+    if (root == NULL)
+    {
+        AVLTree *node = init(value);
+        return node;
+    }
+    if (value < root->data)
+        root->left = insert(root->left, value);
+    else if (value > root->data)
+        root->right = insert(root->right, value);
+    else
+        return root;
+    root->height = 1 + ((height(root->left) > height(root->right)) ? height(root->left) : height(root->right));
+    return rebalance(root);
 }
 
 AVLTree *discard(AVLTree *root, int value)
@@ -603,28 +601,7 @@ AVLTree *discard(AVLTree *root, int value)
         }
     }
     root->height = 1 + ((height(root->left) > height(root->right)) ? height(root->left) : height(root->right));
-    int balanceFactor = balance(root);
-    if (balanceFactor > 1) // Left Heavy
-    {
-        if (balance(root->left) >= 0)
-            return rightRotate(root); // Left Left
-        else
-        {
-            root->left = leftRotate(root->left);
-            return rightRotate(root); // Left Right
-        }
-    }
-    if (balanceFactor < -1) // Right Heavy
-    {
-        if (balance(root->right) <= 0)
-            return leftRotate(root); // Right Right
-        else
-        {
-            root->right = rightRotate(root->right);
-            return leftRotate(root); // Right Left
-        }
-    }
-    return root;
+    return rebalance(root);
 }
 
 int main()
