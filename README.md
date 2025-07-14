@@ -1,9 +1,10 @@
 # Data Structures Repository Structure
+
 ```
 data-structures
 ├── linear
 │   ├── direct
-│   │   ├── list
+│   │   ├── array-list
 │   │   ├── string
 │   ├── sequential
 │   │   ├── stack
@@ -19,8 +20,8 @@ data-structures
 │   │   ├── binary-search-tree
 │   │   ├── avl-tree
 │   │   ├── red-black-tree
-│   │   ├── trie
-│   │   ├── heap
+│   │   ├── prefix-tree
+│   │   ├── binary-heap
 │   │   ├── priority-queue
 │   ├── unordered
 │   │   ├── graph
