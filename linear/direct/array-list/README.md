@@ -1,8 +1,8 @@
-# C-ArrayList: A Dynamic Array Abstract Data Type in C
+# ArrayList: A Dynamic Array Abstract Data Type in C
 
 ## Overview
 
-C-ArrayList is a robust and feature-rich implementation of a dynamic array (often called an ArrayList in other languages) as an Abstract Data Type (ADT) in C. Designed for educational clarity and practical utility, it provides a flexible, resizable array structure capable of storing integer elements. This project serves as a comprehensive example of data structure implementation in pure C, covering fundamental array operations, various search and sort algorithms, and functional programming paradigms.
+ArrayList is a robust and feature-rich implementation of a dynamic array (often called an ArrayList in other languages) as an Abstract Data Type (ADT) in C. Designed for educational clarity and practical utility, it provides a flexible, resizable array structure capable of storing integer elements. This project serves as a comprehensive example of data structure implementation in pure C, covering fundamental array operations, various search and sort algorithms, and functional programming paradigms.
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ C-ArrayList is a robust and feature-rich implementation of a dynamic array (ofte
 
 ## Functions Overview
 
-The `ArrayList.h` header file exposes the following public API functions:
+The `adt_ArrayList.h` header file exposes the following public API functions:
 
 ### Core Management
 
@@ -97,21 +97,21 @@ The `ArrayList.h` header file exposes the following public API functions:
 
 1.  **Download the Library**
 
-    To begin using the library, ensure you have the `ArrayList.h` header file and the `test_arraylist.c` test file in your project directory.
+    To begin using the library, ensure you have the `adt_ArrayList.h` header file and the `test_arraylist.c` test file in your project directory.
 
-    _Note: `ArrayList.h` is a header-only library, meaning all function implementations are directly in the header._
+    _Note: `adt_ArrayList.h` is a header-only library, meaning all function implementations are directly in the header._
 
 2.  **Include the Header File**
 
     In your C program (e.g., `my_program.c` or `test_arraylist.c`), include the header:
 
     ```c
-    #include "ArrayList.h"
+    #include "adt_ArrayList.h"
     ```
 
 3.  **Compile the Code**
 
-    Since `ArrayList.h` is a header-only library, you just need to compile your main application file (e.g., `test_arraylist.c`) and link against the math library. For example, if you're using GCC, compile your program like this:
+    Since `adt_ArrayList.h` is a header-only library, you just need to compile your main application file (e.g., `test_arraylist.c`) and link against the math library. For example, if you're using GCC, compile your program like this:
 
     ```bash
     gcc -o test_arraylist test_arraylist.c -lm
@@ -132,7 +132,7 @@ The `ArrayList.h` header file exposes the following public API functions:
     Here's an example that demonstrates initialization, mutation, traversal, replacement, sorting, and destruction:
 
     ```c
-    #include "ArrayList.h"
+    #include "adt_ArrayList.h"
     #include <stdio.h>
 
     int main() {

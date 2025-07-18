@@ -5,7 +5,7 @@
 #include <time.h>   // For clock()
 #include <limits.h> // For INT_MAX, INT_MIN
 
-#include "ArrayList.h" // Include your header file
+#include "adt_ArrayList.h" // Include your header file
 
 // --- Helper Functions for Testing ---
 
