@@ -35,7 +35,7 @@ The `adt_Stack.h` header file exposes the following API functions:
 - `Stack init(const int capacity)`: Initializes a new stack with the specified `capacity`. Allocates memory for internal array. Exits on failure.
 - `Stack copy(const Stack stack)`: Returns a deep copy of the given stack, including copied contents and capacity.
 - `void clear(Stack *stack)`: Resets the stack's contents without deallocating memory.
-- `void delete(Stack *stack)`: Frees the stack's allocated memory and resets internal fields.
+- `void destroy(Stack *stack)`: Frees the stack's allocated memory and resets internal fields.
 
 ### Status Queries
 
@@ -98,7 +98,7 @@ The `adt_Stack.h` header file exposes the following API functions:
        clear(&stack);
        printf("Is stack empty? %s\n", isEmpty(stack) ? "Yes" : "No");
 
-       delete(&stack);
+       destroy(&stack);
        return 0;
    }
    ```
@@ -107,7 +107,7 @@ The `adt_Stack.h` header file exposes the following API functions:
 
 - **Fixed Capacity:** Stack size is fixed at initialization and does not grow dynamically.
 - **No Type Generality:** This implementation handles only `int` data. For generic types, macros or void pointers would be required.
-- **Manual Deallocation Required:** Caller is responsible for invoking `delete()` to free allocated memory.
+- **Manual Deallocation Required:** Caller is responsible for invoking `destroy()` to free allocated memory.
 - **No Thread Safety:** This is a single-threaded implementation with no internal synchronization primitives.
 - **Basic Error Handling:** Overflow and underflow conditions are reported with messages but do not raise exceptions or return error codes.
 

@@ -2,21 +2,19 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-typedef struct Node
+typedef struct Edge
 {
-    char vertex;
-    int edge;
-    struct Node *next;
-} Node;
+    char label;
+    int weight;
+    struct Edge *next;
+} Edge;
 
 typedef struct
 {
-    int size;
-    int numOfVertex;
-    int numOfEdges;
-    char *vertexMapping;
-    int **adjacencyMatrix;
-    Node **adjacencyList;
+    int V;
+    int E;
+    char *labelMap;
+    Edge **adjacencyList;
 } Digraph;
 
 void swap(int *a, int *b)
@@ -26,335 +24,335 @@ void swap(int *a, int *b)
     *b = temp;
 }
 
-Digraph init(int n)
+int mapIndex(Digraph graph, char vertex)
+{
+    for (int i = 0; i < graph.V; i++)
+        if (graph.labelMap[i] == vertex)
+            return i;
+    return -1;
+}
+
+Edge *create(char vertex, int edge)
+{
+    Edge *e = (Edge *)malloc(sizeof(Edge));
+    e->label = vertex;
+    e->weight = edge;
+    e->next = NULL;
+    return e;
+}
+
+Digraph init()
 {
     Digraph graph;
-    graph.size = n;
-    graph.numOfVertex = 0;
-    graph.numOfEdges = 0;
-    graph.vertexMapping = (char *)malloc(n * sizeof(char));
-    for (int i = 0; i < n; i++)
-    {
-        graph.vertexMapping[i] = '\0';
-    }
-    graph.adjacencyMatrix = (int **)malloc(n * sizeof(int *));
-    for (int i = 0; i < n; i++)
-    {
-        graph.adjacencyMatrix[i] = (int *)malloc(n * sizeof(int));
-        for (int j = 0; j < n; j++)
-        {
-            graph.adjacencyMatrix[i][j] = 0;
-        }
-    }
-    graph.adjacencyList = (Node **)malloc(n * sizeof(Node *));
-    for (int i = 0; i < n; i++)
-    {
-        graph.adjacencyList[i] = NULL;
-    }
+    graph.V = 0;
+    graph.E = 0;
+    graph.labelMap = NULL;
+    graph.adjacencyList = NULL;
     return graph;
 }
 
-Node *node(char label, int weight)
+Digraph copy(Digraph graph)
 {
-    Node *node = (Node *)malloc(sizeof(Node));
-    node->vertex = label;
-    node->edge = weight;
-    node->next = NULL;
-    return node;
+    Digraph newDigraph = init();
+    newDigraph.V = graph.V;
+    newDigraph.E = graph.E;
+    newDigraph.labelMap = (char *)realloc(newDigraph.labelMap, newDigraph.V * sizeof(char));
+    newDigraph.adjacencyList = (Edge **)realloc(newDigraph.adjacencyList, newDigraph.V * sizeof(Edge *));
+
+    for (int i = 0; i < graph.V; i++)
+    {
+        newDigraph.labelMap[i] = graph.labelMap[i];
+        newDigraph.adjacencyList[i] = NULL;
+        Edge *prev = NULL;
+        Edge *curr = graph.adjacencyList[i];
+        while (curr != NULL)
+        {
+            Edge *e = create(curr->label, curr->weight);
+            if (prev == NULL)
+                newDigraph.adjacencyList[i] = e;
+            else
+                prev->next = e;
+            prev = e;
+            curr = curr->next;
+        }
+    }
+
+    return newDigraph;
 }
 
-int getIndex(Digraph graph, char label)
+void clear(Digraph *graph)
 {
-    for (int i = 0; i < graph.numOfVertex; i++)
+    for (int i = 0; i < graph->V; i++)
     {
-        if (graph.vertexMapping[i] == label)
-            return i;
+        Edge *curr = graph->adjacencyList[i];
+        while (curr != NULL)
+        {
+            Edge *next = curr->next;
+            free(curr);
+            curr = next;
+        }
+    }
+    free(graph->adjacencyList);
+    graph->adjacencyList = NULL;
+
+    free(graph->labelMap);
+    graph->labelMap = NULL;
+
+    graph->E = 0;
+    graph->V = 0;
+}
+
+void addVertex(Digraph *graph, char vertex)
+{
+    graph->V++;
+    graph->labelMap = (char *)realloc(graph->labelMap, graph->V * sizeof(char));
+    graph->labelMap[graph->V - 1] = vertex;
+    graph->adjacencyList = (Edge **)realloc(graph->adjacencyList, graph->V * sizeof(Edge *));
+    graph->adjacencyList[graph->V - 1] = NULL;
+}
+
+void removeVertex(Digraph *graph, char vertex)
+{
+    int idx = index(*graph, vertex);
+    if (idx == -1)
+        return;
+
+    for (int i = 0; i < graph->V; i++)
+    {
+        if (i == idx)
+            continue;
+
+        Edge *prev = NULL;
+        Edge *curr = graph->adjacencyList[i];
+        while (curr != NULL)
+        {
+            if (curr->label == vertex)
+            {
+                if (prev == NULL)
+                    graph->adjacencyList[i] = curr->next;
+                else
+                    prev->next = curr->next;
+                free(curr);
+                graph->E--;
+                break;
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+    }
+
+    Edge *prev = NULL;
+    Edge *curr = graph->adjacencyList[idx];
+    while (curr != NULL)
+    {
+        prev = curr;
+        curr = curr->next;
+        free(prev);
+        graph->E--;
+    }
+
+    graph->V--;
+
+    graph->labelMap[idx] = graph->labelMap[graph->V];
+    graph->adjacencyList[idx] = graph->adjacencyList[graph->V];
+
+    graph->labelMap = (char *)realloc(graph->labelMap, graph->V * sizeof(char));
+    graph->adjacencyList = (Edge **)realloc(graph->adjacencyList, graph->V * sizeof(Edge *));
+}
+
+void addEdge(Digraph *graph, char vertex1, int edge, char vertex2)
+{
+    int idx1 = index(*graph, vertex1);
+    int idx2 = index(*graph, vertex2);
+    if (idx1 == -1 || idx2 == -1)
+        return;
+
+    bool exists = false;
+
+    Edge *curr = graph->adjacencyList[idx1];
+    while (curr != NULL)
+    {
+        if (curr->label == vertex2)
+        {
+            curr->weight = edge;
+            exists = true;
+            break;
+        }
+        curr = curr->next;
+    }
+
+    curr = graph->adjacencyList[idx2];
+    while (curr != NULL)
+    {
+        if (curr->label == vertex1)
+        {
+            curr->weight = edge;
+            break;
+        }
+        curr = curr->next;
+    }
+
+    if (!exists)
+    {
+        curr = graph->adjacencyList[idx1];
+        graph->adjacencyList[idx1] = create(vertex2, edge);
+        graph->adjacencyList[idx1]->next = curr;
+
+        curr = graph->adjacencyList[idx2];
+        graph->adjacencyList[idx2] = create(vertex1, edge);
+        graph->adjacencyList[idx2]->next = curr;
+
+        graph->E++;
+    }
+}
+
+void removeEdge(Digraph *graph, char vertex1, char vertex2)
+{
+    int idx1 = index(*graph, vertex1);
+    int idx2 = index(*graph, vertex2);
+    if (idx1 == -1 || idx2 == -1)
+        return;
+
+    bool removed = false;
+
+    Edge *prev = NULL;
+    Edge *curr = graph->adjacencyList[idx1];
+    while (curr != NULL)
+    {
+        if (curr->label == vertex2)
+        {
+            if (prev == NULL)
+                graph->adjacencyList[idx1] = curr->next;
+            else
+                prev->next = curr->next;
+            free(curr);
+            removed = true;
+            break;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    prev = NULL;
+    curr = graph->adjacencyList[idx2];
+    while (curr != NULL)
+    {
+        if (curr->label == vertex1)
+        {
+            if (prev == NULL)
+                graph->adjacencyList[idx2] = curr->next;
+            else
+                prev->next = curr->next;
+            free(curr);
+            break;
+        }
+        prev = curr;
+        curr = curr->next;
+    }
+
+    if (removed)
+        graph->E--;
+}
+
+bool hasSelfloop(Digraph graph, char vertex)
+{
+    int idx = index(graph, vertex);
+    if (idx == -1)
+        return false;
+    Edge *curr = graph.adjacencyList[idx];
+    while (curr != NULL)
+    {
+        if (curr->label == vertex)
+            return true;
+        curr = curr->next;
+    }
+    return false;
+}
+
+bool areAdjacent(Digraph graph, char vertex1, char vertex2)
+{
+    int idx = index(graph, vertex1);
+    if (idx == -1)
+        return false;
+    Edge *curr = graph.adjacencyList[idx];
+    while (curr != NULL)
+    {
+        if (curr->label == vertex2)
+            return true;
+        curr = curr->next;
+    }
+    return false;
+}
+
+int vertexDegree(Digraph graph, char vertex)
+{
+    int idx = index(graph, vertex);
+    if (idx == -1)
+        return -1;
+    int degree = 0;
+    Edge *curr = graph.adjacencyList[idx];
+    while (curr != NULL)
+    {
+        if (curr->label == vertex)
+            degree += 2;
+        else
+            degree++;
+        curr = curr->next;
+    }
+    return degree;
+}
+
+int edgeWeight(Digraph graph, char vertex1, char vertex2)
+{
+    int idx = index(graph, vertex1);
+    if (idx == -1)
+        return -1;
+    Edge *curr = graph.adjacencyList[idx];
+    while (curr != NULL)
+    {
+        if (curr->label == vertex2)
+            return curr->weight;
+        curr = curr->next;
     }
     return -1;
 }
 
-void addVertex(Digraph *graph, char label)
+float graphDensity(Digraph graph)
 {
-    graph->vertexMapping[graph->numOfVertex++] = label;
+    return (float)(2 * graph.E) / (graph.V * (graph.V + 1));
 }
 
-void addEdge(Digraph *graph, char label1, int weight, char label2)
+void DFSIterative(Digraph graph, char vertex)
 {
-    int index1 = getIndex(*graph, label1);
-    int index2 = getIndex(*graph, label2);
-    if (index1 != -1 && index2 != -1)
-    {
-        graph->adjacencyMatrix[index1][index2] = weight;
-        graph->adjacencyMatrix[index2][index1] = weight;
-
-        Node *new1 = node(label2, weight);
-        if (graph->adjacencyList[index1] == NULL)
-        {
-            graph->adjacencyList[index1] = new1;
-        }
-        else
-        {
-            Node *ptr1 = graph->adjacencyList[index1];
-            while (ptr1->next != NULL)
-            {
-                ptr1 = ptr1->next;
-            }
-            ptr1->next = new1;
-        }
-
-        Node *new2 = node(label1, weight);
-        if (graph->adjacencyList[index2] == NULL)
-        {
-            graph->adjacencyList[index2] = new2;
-        }
-        else
-        {
-            Node *ptr2 = graph->adjacencyList[index2];
-            while (ptr2->next != NULL)
-            {
-                ptr2 = ptr2->next;
-            }
-            ptr2->next = new2;
-        }
-
-        graph->numOfEdges++;
-    }
-}
-
-void removeEdge(Digraph *graph, char label1, char label2)
-{
-    int index1 = getIndex(*graph, label1);
-    int index2 = getIndex(*graph, label2);
-    if (index1 != -1 && index2 != -1)
-    {
-        graph->adjacencyMatrix[index1][index2] = 0;
-        graph->adjacencyMatrix[index2][index1] = 0;
-
-        Node *prev1 = NULL;
-        Node *curr1 = graph->adjacencyList[index1];
-        while (curr1->vertex != label1)
-        {
-            prev1 = curr1;
-            curr1 = curr1->next;
-        }
-        if (prev1 == NULL)
-            graph->adjacencyList[index1] = curr1->next;
-        else
-            prev1->next = curr1->next;
-        free(curr1);
-
-        Node *prev2 = NULL;
-        Node *curr2 = graph->adjacencyList[index2];
-        while (curr2->vertex != label2)
-        {
-            prev2 = curr2;
-            curr2 = curr2->next;
-        }
-        if (prev2 == NULL)
-            graph->adjacencyList[index2] = curr2->next;
-        else
-            prev2->next = curr2->next;
-        free(curr2);
-
-        graph->numOfEdges--;
-    }
-}
-
-void removeVertex(Digraph *graph, char label)
-{
-    int index = getIndex(*graph, label);
-    for (int i = 0; i < graph->numOfVertex; i++)
-    {
-        graph->adjacencyMatrix[i][index] = graph->adjacencyMatrix[i][graph->numOfVertex - 1];
-    }
-    for (int j = 0; j < graph->numOfVertex; j++)
-    {
-        graph->adjacencyMatrix[index][j] = graph->adjacencyMatrix[graph->numOfVertex - 1][j];
-    }
-
-    Node *ptr = graph->adjacencyList[index];
-    graph->adjacencyList[index] = graph->adjacencyList[--graph->numOfVertex];
-    graph->adjacencyList[graph->numOfVertex] = NULL;
-    graph->vertexMapping[index] = graph->vertexMapping[graph->numOfVertex];
-    int connected;
-    Node *prev, *curr;
-    while (ptr != NULL)
-    {
-        connected = getIndex(*graph, ptr->vertex);
-        prev = NULL;
-        curr = graph->adjacencyList[connected];
-        while (curr->vertex != label)
-        {
-            prev = curr;
-            curr = curr->next;
-        }
-        if (prev == NULL)
-            graph->adjacencyList[connected] = curr->next;
-        else
-            prev->next = curr->next;
-        free(curr);
-        prev = ptr;
-        ptr = ptr->next;
-        free(prev);
-        graph->numOfEdges--;
-    }
-}
-
-void printAdjacencyMatrix(Digraph graph)
-{
-    for (int i = -1; i < graph.numOfVertex; i++)
-    {
-        if (i == -1)
-            printf("  ");
-        else
-            printf("%c ", graph.vertexMapping[i]);
-        for (int j = 0; j < graph.numOfVertex; j++)
-        {
-            if (i == -1)
-                printf("%c ", graph.vertexMapping[j]);
-            else
-                printf("%d ", graph.adjacencyMatrix[i][j]);
-        }
-        printf("\n");
-    }
-}
-
-void printAdjacencyList(Digraph graph)
-{
-    for (int i = 0; i < graph.numOfVertex; i++)
-    {
-        Node *ptr = graph.adjacencyList[i];
-        printf("%c -> ", graph.vertexMapping[i]);
-        while (ptr != NULL)
-        {
-            printf("(%c,%d) -> ", ptr->vertex, ptr->edge);
-            ptr = ptr->next;
-        }
-        printf("NULL\n");
-    }
-}
-
-bool isSelfloop(Digraph graph, char label)
-{
-    int index = getIndex(graph, label);
-    return graph.adjacencyMatrix[index][index] != 0;
-}
-
-bool isUnweighted(Digraph graph)
-{
-    int wgt = -1;
-    for (int i = 0; i < graph.numOfVertex; i++)
-    {
-        for (int j = 0; j <= i; j++)
-        {
-            if (graph.adjacencyMatrix[i][j] != 0)
-            {
-                if (wgt == -1)
-                    wgt = graph.adjacencyMatrix[i][j];
-                else if (graph.adjacencyMatrix[i][j] != wgt)
-                    return false;
-            }
-        }
-    }
-    return true;
-}
-
-bool isSparse(Digraph graph)
-{
-    int leastPossibleEdges = graph.numOfVertex - 1;
-    int mostPossibleEdges = graph.numOfVertex * (graph.numOfVertex - 1) / 2;
-    int mid = (leastPossibleEdges + mostPossibleEdges) / 2;
-    if (graph.numOfEdges <= mid && graph.numOfEdges >= leastPossibleEdges)
-        return true;
-    else
-        return false;
-}
-
-bool isDense(Digraph graph)
-{
-    int leastPossibleEdges = graph.numOfVertex - 1;
-    int mostPossibleEdges = graph.numOfVertex * (graph.numOfVertex - 1) / 2;
-    int mid = (leastPossibleEdges + mostPossibleEdges) / 2;
-    if (graph.numOfEdges > mid && graph.numOfEdges <= mostPossibleEdges)
-        return true;
-    else
-        return false;
-}
-
-bool isRegular(Digraph graph)
-{
-    int prevDegree = -1;
-    int currDegree;
-    Node *ptr;
-    for (int i = 0; i < graph.numOfVertex; i++)
-    {
-        currDegree = 0;
-        ptr = graph.adjacencyList[i];
-        while (ptr != NULL)
-        {
-            currDegree++;
-            ptr = ptr->next;
-        }
-        if (prevDegree == -1)
-            prevDegree = currDegree;
-        else if (prevDegree != currDegree)
-            return false;
-    }
-    return true;
-}
-
-bool isComplete(Digraph graph)
-{
-    int maxDegree = graph.numOfVertex - 1;
-    int currDegree;
-    Node *ptr;
-    for (int i = 0; i < graph.numOfVertex; i++)
-    {
-        currDegree = 0;
-        ptr = graph.adjacencyList[i];
-        while (ptr != NULL)
-        {
-            currDegree++;
-            ptr = ptr->next;
-        }
-        if (maxDegree != currDegree)
-            return false;
-    }
-    return true;
-}
-
-void depthFirstSearchIterative(Digraph graph, char label)
-{
-    int index = getIndex(graph, label);
+    int index = mapIndex(graph, vertex);
     if (index == -1)
         return;
 
-    int stack[graph.numOfVertex];
-    int top = -1;
-
-    bool visited[graph.numOfVertex];
-    for (int i = 0; i < graph.numOfVertex; i++)
-    {
+    bool visited[graph.V];
+    for (int i = 0; i < graph.V; i++)
         visited[i] = false;
-    }
 
-    stack[++top] = index;
+    int stack[graph.V];
+    int top = 0;
+
     visited[index] = true;
+    stack[top++] = index;
     printf("DFSi: ");
-    while (top > -1)
+    while (top > 0)
     {
-        index = stack[top--];
-        for (int j = graph.numOfVertex - 1; j >= 0; j--)
+        index = stack[--top];
+        printf("%c ", graph.labelMap[index]);
+        Edge *curr = graph.adjacencyList[index];
+        while (curr != NULL)
         {
-            if (graph.adjacencyMatrix[index][j] != 0 && visited[j] == false)
+            int neighbour = mapIndex(graph, curr->label);
+            if (!visited[neighbour])
             {
-                stack[++top] = j;
-                visited[j] = true;
+                visited[neighbour] = true;
+                stack[top++] = neighbour;
             }
+            curr = curr->next;
         }
-        printf("%c", graph.vertexMapping[index]);
-        if (top > -1)
-            printf(" -> ");
     }
     printf("\n");
 }
@@ -362,84 +360,88 @@ void depthFirstSearchIterative(Digraph graph, char label)
 void dfsHelper(Digraph graph, int index, bool visited[])
 {
     visited[index] = true;
-    printf("%c -> ", graph.vertexMapping[index]);
-    for (int j = 0; j < graph.numOfVertex; j++)
+    printf("%c ", graph.labelMap[index]);
+    Edge *curr = graph.adjacencyList[index];
+    while (curr != NULL)
     {
-        if (graph.adjacencyMatrix[index][j] != 0 && visited[j] == false)
-        {
-            dfsHelper(graph, j, visited);
-        }
+        int neighbour = mapIndex(graph, curr->label);
+        if (!visited[neighbour])
+            dfsHelper(graph, neighbour, visited);
+        curr = curr->next;
     }
 }
 
-void depthFirstSearchRecursive(Digraph graph, char label)
+void DFSRecursive(Digraph graph, char label)
 {
-    int index = getIndex(graph, label);
+    int index = mapIndex(graph, label);
     if (index == -1)
         return;
 
-    bool visited[graph.numOfVertex];
-    for (int i = 0; i < graph.numOfVertex; i++)
-    {
+    bool visited[graph.V];
+    for (int i = 0; i < graph.V; i++)
         visited[i] = false;
-    }
 
     printf("DFSr: ");
     dfsHelper(graph, index, visited);
-    printf("NULL\n");
+    printf("\n");
 }
 
-void breadthFirstSearchIterative(Digraph graph, char label)
+void BFSIterative(Digraph graph, char label)
 {
-    int index = getIndex(graph, label);
+    int index = mapIndex(graph, label);
     if (index == -1)
         return;
 
-    int queue[graph.numOfVertex];
-    int front = -1, rear = -1;
-
-    bool visited[graph.numOfVertex];
-    for (int i = 0; i < graph.numOfVertex; i++)
-    {
+    bool visited[graph.V];
+    for (int i = 0; i < graph.V; i++)
         visited[i] = false;
-    }
 
-    queue[++rear] = index;
+    int queue[graph.V];
+    int front = 0, rear = 0;
+
     visited[index] = true;
+    queue[rear++] = index;
     printf("BFSi: ");
     while (front < rear)
     {
-        index = queue[++front];
-        for (int j = 0; j < graph.numOfVertex; j++)
+        index = queue[front++];
+        printf("%c ", graph.labelMap[index]);
+
+        Edge *curr = graph.adjacencyList[index];
+        while (curr != NULL)
         {
-            if (graph.adjacencyMatrix[index][j] != 0 && visited[j] == false)
+            int neighbour = mapIndex(graph, curr->label);
+            if (!visited[neighbour])
             {
-                queue[++rear] = j;
-                visited[j] = true;
+                visited[neighbour] = true;
+                queue[rear++] = neighbour;
             }
+            curr = curr->next;
         }
-        printf("%c", graph.vertexMapping[index]);
-        if (front < rear)
-            printf(" -> ");
     }
     printf("\n");
 }
 
 void bfsHelper(Digraph graph, int currLevel[], int currCount, bool visited[])
 {
-    int nextLevel[graph.numOfVertex];
+    int nextLevel[graph.V];
     int nextCount = 0;
 
     for (int i = 0; i < currCount; i++)
     {
-        printf("%c -> ", graph.vertexMapping[currLevel[i]]);
-        for (int j = 0; j < graph.numOfVertex; j++)
+        int index = currLevel[i];
+        printf("%c ", graph.labelMap[index]);
+
+        Edge *curr = graph.adjacencyList[index];
+        while (curr != NULL)
         {
-            if (graph.adjacencyMatrix[currLevel[i]][j] != 0 && visited[j] == false)
+            int neighbour = mapIndex(graph, curr->label);
+            if (!visited[neighbour])
             {
-                visited[j] = true;
-                nextLevel[nextCount++] = j;
+                visited[neighbour] = true;
+                nextLevel[nextCount++] = neighbour;
             }
+            curr = curr->next;
         }
     }
 
@@ -449,84 +451,214 @@ void bfsHelper(Digraph graph, int currLevel[], int currCount, bool visited[])
     }
 }
 
-void breadthFirstSearchRecursive(Digraph graph, char label)
+void BFSRecursive(Digraph graph, char label)
 {
-    int index = getIndex(graph, label);
+    int index = mapIndex(graph, label);
     if (index == -1)
         return;
 
-    bool visited[graph.numOfVertex];
-    for (int i = 0; i < graph.numOfVertex; i++)
-    {
+    bool visited[graph.V];
+    for (int i = 0; i < graph.V; i++)
         visited[i] = false;
-    }
 
-    int currLevel[graph.numOfVertex];
+    int currLevel[graph.V];
     int currCount = 0;
     visited[index] = true;
     currLevel[currCount++] = index;
 
     printf("BFSr: ");
     bfsHelper(graph, currLevel, currCount, visited);
-    printf("NULL\n");
+    printf("\n");
+}
+
+// algos
+
+bool isUnweighted(Digraph graph)
+{
+    if (graph.E == 0)
+        return true;
+    int commonWeight = -1;
+    for (int i = 0; i < graph.V; i++)
+    {
+        Edge *curr = graph.adjacencyList[i];
+        while (curr != NULL)
+        {
+            if (commonWeight == -1)
+                commonWeight = curr->weight;
+            else if (curr->weight != commonWeight)
+                return false;
+            curr = curr->next;
+        }
+    }
+    return true;
+}
+
+bool isRegular(Digraph graph)
+{
+    if (graph.E == 0)
+        return true;
+    int neighbours = -1;
+    for (int i = 0; i < graph.V; i++)
+    {
+        int count = 0;
+        Edge *curr = graph.adjacencyList[i];
+        while (curr != NULL)
+        {
+            count++;
+            curr = curr->next;
+        }
+        if (neighbours == -1)
+            neighbours = count;
+        else if (count != neighbours)
+            return false;
+    }
+    return true;
+}
+
+bool isComplete(Digraph graph)
+{
+    if (graph.E == 0)
+        return true;
+    for (int i = 0; i < graph.V; i++)
+    {
+        int degree = 0;
+        Edge *curr = graph.adjacencyList[i];
+        while (curr != NULL)
+        {
+            if (curr->label == graph.labelMap[i])
+                degree += 2;
+            else
+                degree++;
+            curr = curr->next;
+        }
+        if (degree != graph.V + 1)
+            return false;
+    }
+    return true;
+}
+
+bool isSparse(Digraph graph)
+{
+    return density(graph) <= 0.5;
+}
+
+bool isDense(Digraph graph)
+{
+    return density(graph) > 0.5;
 }
 
 bool isConnected(Digraph graph)
 {
-    bool all(bool array[], int n)
-    {
-        for (int i = 0; i < n; i++)
-        {
-            if (array[i] == false)
-                return false;
-        }
+    if (graph.V <= 1)
         return true;
+
+    bool visited[graph.V];
+    for (int i = 0; i < graph.V; i++)
+        visited[i] = false;
+
+    int stack[graph.V];
+    int top = 0;
+
+    visited[0] = true;
+    stack[top++] = 0;
+    while (top > 0)
+    {
+        int index = stack[--top];
+        Edge *curr = graph.adjacencyList[index];
+        while (curr != NULL)
+        {
+            int neighbour = mapIndex(graph, curr->label);
+            if (!visited[neighbour])
+            {
+                visited[neighbour] = true;
+                stack[top++] = neighbour;
+            }
+            curr = curr->next;
+        }
     }
 
-    int stack[graph.numOfVertex];
-    int top = -1;
+    for (int i = 0; i < graph.V; i++)
+        if (!visited[i])
+            return false;
 
-    bool visited[graph.numOfVertex];
-    for (int i = 0; i < graph.numOfVertex; i++)
+    return true;
+}
+
+bool isDisconnected(Digraph graph)
+{
+    return !isConnected(graph);
+}
+
+bool isCyclic(Digraph graph)
+{
+    if (graph.V == 0 && graph.E == 0)
+        return false;
+
+    bool visited[graph.V];
+    int parent[graph.V];
+    for (int i = 0; i < graph.V; i++)
     {
         visited[i] = false;
+        parent[i] = -1;
     }
 
-    int index = 0;
-    stack[++top] = index;
-    visited[index] = true;
-    while (top > -1)
+    int stack[graph.V];
+    int top = 0;
+
+    for (int start = 0; start < graph.V; start++)
     {
-        index = stack[top--];
-        for (int j = graph.numOfVertex - 1; j >= 0; j--)
+        if (visited[start])
+            continue;
+
+        visited[start] = true;
+        stack[top++] = start;
+
+        while (top > 0)
         {
-            if (graph.adjacencyMatrix[index][j] != 0 && visited[j] == false)
+            int index = stack[--top];
+            Edge *curr = graph.adjacencyList[index];
+            while (curr != NULL)
             {
-                stack[++top] = j;
-                visited[j] = true;
+                int neighbour = mapIndex(graph, curr->label);
+                if (!visited[neighbour])
+                {
+                    visited[neighbour] = true;
+                    parent[neighbour] = index;
+                    stack[top++] = neighbour;
+                }
+                else if (neighbour != parent[index])
+                    return true;
+                curr = curr->next;
             }
         }
     }
 
-    return all(visited, graph.numOfVertex);
+    return false;
 }
 
-bool isCyclic(Digraph graph) {}
-
-void shortestPath(Digraph graph, char labelStart, char labelEnd)
+bool isAcyclic(Digraph graph)
 {
-    // DIJKSTRA'S
-    // BELLMAN-FORD
-    // A*
-    // FLOYD-WARSHALL
-    // JOHNSON
+    return !isCyclic(graph);
 }
 
-void minimumSpanningTree(Digraph graph)
+bool isTree(Digraph graph)
 {
-    // BORUVKA'S
-    // PRIM'S
-    // KRUSKAL'S
+    return graph.E == graph.V - 1 && isConnected(graph) && isAcyclic(graph);
+}
+
+void describe(Digraph graph)
+{
+    for (int i = 0; i < graph.V; i++)
+    {
+        printf("%c |", graph.labelMap[i]);
+        Edge *curr = graph.adjacencyList[i];
+        while (curr != NULL)
+        {
+            printf(" (%c,%d)", curr->label, curr->weight);
+            curr = curr->next;
+        }
+        printf("\n");
+    }
 }
 
 int main()

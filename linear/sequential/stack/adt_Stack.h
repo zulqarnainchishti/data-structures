@@ -64,10 +64,10 @@ void clear(Stack *stack)
 
 /**
  * @brief Deallocates the memory used by the stack.
- * @param vector A pointer to the stack to be deleted.
+ * @param vector A pointer to the stack to be destroyd.
  * @note After calling this function, the stack pointer should not be used.
  */
-void delete(Stack *vector)
+void destroy(Stack *vector)
 {
     free(vector->array);
     vector->array = NULL;

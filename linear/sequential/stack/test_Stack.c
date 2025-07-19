@@ -67,7 +67,7 @@ void test_init_and_basic_ops()
     clear(&s);
     ASSERT_BOOL(isEmpty(s), "Stack should be empty after clear", true);
 
-    delete(&s);
+    destroy(&s);
 }
 
 void test_stack_overflow_underflow()
@@ -84,7 +84,7 @@ void test_stack_overflow_underflow()
     ASSERT_INT(pop(&s), "Pop from empty should return -1", -1, pop(&s));
     ASSERT_INT(peek(s), "Peek from empty should return -1", -1, peek(s));
 
-    delete(&s);
+    destroy(&s);
 }
 
 void test_copy_stack()
@@ -102,8 +102,8 @@ void test_copy_stack()
     pop(&s1);
     ASSERT_INT(s2.top, "Modifying original does not affect copy", 2, s2.top);
 
-    delete(&s1);
-    delete(&s2);
+    destroy(&s1);
+    destroy(&s2);
 }
 
 void test_stress_stack()
@@ -128,20 +128,20 @@ void test_stress_stack()
     ASSERT_BOOL(valid, "Pop sequence should be reverse of push", true);
     ASSERT_BOOL(isEmpty(s), "Stack should be empty after full pop", true);
 
-    delete(&s);
+    destroy(&s);
 }
 
 void test_reinit_stack()
 {
     Stack s = init(2);
     push(&s, 7);
-    delete(&s);
+    destroy(&s);
 
     s = init(3);
     ASSERT_BOOL(isEmpty(s), "Reinitialized stack should be empty", true);
     push(&s, 99);
     ASSERT_INT(peek(s), "Peek after reinit push should return 99", 99, peek(s));
-    delete(&s);
+    destroy(&s);
 }
 
 int main()
