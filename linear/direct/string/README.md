@@ -6,17 +6,17 @@ String ADT is a robust and feature-rich implementation of a dynamic, mutable str
 
 ## Table of Contents
 
-- [Features](https://www.google.com/search?q=%23features)
-- [Function Overview](https://www.google.com/search?q=%23function-overview)
-  - [Core Management](https://www.google.com/search?q=%23core-management)
-  - [Content Manipulation](https://www.google.com/search?q=%23content-manipulation)
-  - [Content Validation & Comparison](https://www.google.com/search?q=%23content-validation--comparison)
-  - [String Formatting](https://www.google.com/search?q=%23string-formatting)
-  - [Advanced Utilities](https://www.google.com/search?q=%23advanced-utilities)
-- [How to Compile and Run](https://www.google.com/search?q=%23how-to-compile-and-run)
-- [Limitations](https://www.google.com/search?q=%23limitations)
-- [License](https://www.google.com/search?q=%23license)
-- [Author](https://www.google.com/search?q=%23author)
+- [Features](#features)
+- [Function Overview](#function-overview)
+  - [Core Management](#core-management)
+  - [Content Manipulation](#content-manipulation)
+  - [Content Validation & Comparison](#content-validation--comparison)
+  - [String Formatting](#string-formatting)
+  - [Advanced Utilities](#advanced-utilities)
+- [How to Compile and Run](#how-to-compile-and-run)
+- [Limitations](#limitations)
+- [License](#license)
+- [Author](#author)
 
 ## Features
 
@@ -75,14 +75,14 @@ The `adt_String.h` header file exposes the following public API functions:
 - `String toUpper(const String string)`: Returns a new `String` with all lowercase alphabetic characters converted to uppercase.
 - `String toLower(const String string)`: Returns a new `String` with all uppercase alphabetic characters converted to lowercase.
 - `String leftAlign(const String string, char padding, int length)`: Returns a new `String` left-aligned within `length`, padded with `padding` character.
-- `String centerAlign(String string, char padding, int length)`: Returns a new `String` centered within `length`, padded with `padding` character.
-- `String rightAlign(String string, char padding, int length)`: Returns a new `String` right-aligned within `length`, padded with `padding` character.
-- `String trim(String string, char padding)`: Returns a new `String` with leading and trailing occurrences of `padding` character removed.
+- `String centerAlign(const String string, char padding, int length)`: Returns a new `String` centered within `length`, padded with `padding` character.
+- `String rightAlign(const String string, char padding, int length)`: Returns a new `String` right-aligned within `length`, padded with `padding` character.
+- `String trim(const String string, char padding)`: Returns a new `String` with leading and trailing occurrences of `padding` character removed.
 
 ### Advanced Utilities
 
-- `String *split(String string, char delimiter, int *size)`: Splits a `String` into a dynamically allocated array of `String` objects based on `delimiter`. The `size` of the array is returned via a pointer. **Requires freeing both the individual `String` objects in the array and the array itself.**
-- `String join(String *array, char delimiter, int size)`: Joins an array of `String` objects into a single `String` using `delimiter` between elements. Returns a new `String`.
+- `String *split(const String string, char delimiter, int *size)`: Splits a `String` into a dynamically allocated array of `String` objects based on `delimiter`. The `size` of the array is returned via a pointer. **Requires freeing both the individual `String` objects in the array and the array itself.**
+- `String join(const String *array, char delimiter, int size)`: Joins an array of `String` objects into a single `String` using `delimiter` between elements. Returns a new `String`.
 - `int parse(const String number, const int base)`: Converts a `String` representation of a number (`number`) in a given `base` to an `int`. Supports bases 2-36.
 - `String convert(int num, int base)`: Converts an `int` (`num`) to its `String` representation in a given `base`. Returns a new `String`.
 

@@ -791,7 +791,7 @@ String leftAlign(const String string, char padding, int length)
  * @param length The total desired length of the aligned string.
  * @return A new String object that is centered.
  */
-String centerAlign(String string, char padding, int length)
+String centerAlign(const String string, char padding, int length)
 {
     if (length < string.length)
         length = string.length;
@@ -828,7 +828,7 @@ String centerAlign(String string, char padding, int length)
  * @param length The total desired length of the aligned string.
  * @return A new String object that is right-aligned.
  */
-String rightAlign(String string, char padding, int length)
+String rightAlign(const String string, char padding, int length)
 {
     if (length < string.length)
         length = string.length;
@@ -859,7 +859,7 @@ String rightAlign(String string, char padding, int length)
  * @param padding The character to trim from the ends of the string.
  * @return A new String object with the specified characters removed from the ends.
  */
-String trim(String string, char padding)
+String trim(const String string, char padding)
 {
     int start = 0;
     int end = string.length - 1;
@@ -897,7 +897,7 @@ String trim(String string, char padding)
  * @return A dynamically allocated array of String objects. The caller is responsible for freeing
  * each String.word and the array itself.
  */
-String *split(String string, char delimiter, int *size)
+String *split(const String string, char delimiter, int *size)
 {
     String *array = NULL;
     *size = 0;
@@ -945,7 +945,7 @@ String *split(String string, char delimiter, int *size)
  * @param size The number of String objects in the array.
  * @return A new String object containing the joined content.
  */
-String join(String *array, char delimiter, int size)
+String join(const String *array, char delimiter, int size)
 {
     if (size == 0)
         return init(""); // Return an empty string if nothing to join
