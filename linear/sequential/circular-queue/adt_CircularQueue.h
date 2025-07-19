@@ -54,12 +54,11 @@ CircularQueue copy(const CircularQueue queue)
 {
     // Initialize with the logical capacity (queue.capacity - 1)
     CircularQueue copied = init(queue.capacity - 1);
-    int i = queue.front;
-    while (i != queue.rear)
+    int curr = queue.front;
+    while (curr != queue.rear)
     {
-        copied.array[copied.rear] = queue.array[i];
-        copied.rear = (copied.rear + 1) % copied.capacity;
-        i = (i + 1) % queue.capacity;
+        copied.array[copied.rear++] = queue.array[curr];
+        curr = (curr + 1) % queue.capacity;
     }
     return copied;
 }
