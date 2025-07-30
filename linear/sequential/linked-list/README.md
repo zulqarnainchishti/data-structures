@@ -51,29 +51,29 @@ The `adt_LinkedList.h` header file exposes the following API functions:
 
 ### Search and Traversal
 
-- `LLNode *search(const LinkedList *list, int value)`: Searches the list for the first occurrence of `value` and returns a pointer to the node if found, otherwise `NULL`.
+- `LLNode *search(const LinkedList *list, const int value)`: Searches the list for the first occurrence of `value` and returns a pointer to the node if found, otherwise `NULL`.
 - `void traverse(const LinkedList *list)`: Prints the data of each node in the list from head to tail.
 
 ### Insertion Operations
 
-- `void insertAtStart(LinkedList *list, int value)`: Inserts a new node with `value` at the beginning of the list.
-- `void insertAtEnd(LinkedList *list, int value)`: Inserts a new node with `value` at the end of the list.
-- `void insertAtIndex(LinkedList *list, int value, int index)`: Inserts a new node with `value` at the specified `index`. Handles out-of-bounds indices by inserting at the start or end.
-- `int insertAfterValue(LinkedList *list, int newVal, int oldVal)`: Inserts a new node with `newVal` after the first occurrence of a node containing `oldVal`. Returns 0 on success, -1 if `oldVal` is not found.
+- `void insertAtStart(LinkedList *list, const int value)`: Inserts a new node with `value` at the beginning of the list.
+- `void insertAtEnd(LinkedList *list, const int value)`: Inserts a new node with `value` at the end of the list.
+- `void insertAtIndex(LinkedList *list, const int value, const int index)`: Inserts a new node with `value` at the specified `index`. Handles out-of-bounds indices by inserting at the start or end.
+- `int insertAfterValue(LinkedList *list, const int newVal, const int oldVal)`: Inserts a new node with `newVal` after the first occurrence of a node containing `oldVal`. Returns 0 on success, -1 if `oldVal` is not found.
 
 ### Deletion Operations
 
 - `int deleteStart(LinkedList *list)`: Deletes the first node in the list. Returns the data of the deleted node, or -1 if the list is empty.
 - `int deleteEnd(LinkedList *list)`: Deletes the last node in the list. Returns the data of the deleted node, or -1 if the list is empty.
-- `int deleteIndex(LinkedList *list, int index)`: Deletes the node at the specified `index`. Returns the data of the deleted node, or -1 if the list is empty. Handles out-of-bounds indices by deleting from the start or end.
-- `int deleteValue(LinkedList *list, int value)`: Deletes the first node containing the specified `value`. Returns 0 on success, -1 if `value` is not found or list is empty.
+- `int deleteIndex(LinkedList *list, const int index)`: Deletes the node at the specified `index`. Returns the data of the deleted node, or -1 if the list is empty. Handles out-of-bounds indices by deleting from the start or end.
+- `int deleteValue(LinkedList *list, const int value)`: Deletes the first node containing the specified `value`. Returns 0 on success, -1 if `value` is not found or list is empty.
 
 ---
 
 ## How to Compile and Run
 
 1.  **Download the Library**
-    Ensure you have the `adt_LinkedList.h` file and a corresponding test program (e.g., `main.c`) in the same directory.
+    Ensure you have the `adt_LinkedList.h` file and a corresponding test program (e.g., `test_LinkedList.c`) in the same directory.
 
 2.  **Include the Header File**
     Add the following directive in your source file:

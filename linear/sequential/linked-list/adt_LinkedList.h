@@ -17,7 +17,7 @@ typedef struct LLNode
 /**
  * @brief Represents a singly linked list.
  */
-typedef struct LinkedList
+typedef struct
 {
     struct LLNode *head; /**< Pointer to the head (first) node of the list. */
     int length;          /**< The number of nodes in the list. */
@@ -89,9 +89,9 @@ LLNode *__recCopy__(const LLNode *node)
 {
     if (node == NULL)
         return NULL;
-    LLNode *newLLNode = create(node->data);
-    newLLNode->next = __recCopy__(node->next);
-    return newLLNode;
+    LLNode *newNode = create(node->data);
+    newNode->next = __recCopy__(node->next);
+    return newNode;
 }
 
 /**
@@ -102,6 +102,8 @@ LLNode *__recCopy__(const LLNode *node)
 LinkedList copy(const LinkedList *list)
 {
     LinkedList newList = init();
+    if (list == NULL)
+        return newList;
     newList.head = __recCopy__(list->head);
     newList.length = list->length;
     return newList;
@@ -115,17 +117,17 @@ void reverse(LinkedList *list)
 {
     if (list == NULL || list->length <= 1)
         return;
-    LLNode *prevLLNode = NULL;
-    LLNode *currLLNode = list->head;
-    LLNode *nextLLNode;
-    while (currLLNode != NULL)
+    LLNode *prevNode = NULL;
+    LLNode *currNode = list->head;
+    LLNode *nextNode;
+    while (currNode != NULL)
     {
-        nextLLNode = currLLNode->next;
-        currLLNode->next = prevLLNode;
-        prevLLNode = currLLNode;
-        currLLNode = nextLLNode;
+        nextNode = currNode->next;
+        currNode->next = prevNode;
+        prevNode = currNode;
+        currNode = nextNode;
     }
-    list->head = prevLLNode;
+    list->head = prevNode;
 }
 
 /**
@@ -134,8 +136,10 @@ void reverse(LinkedList *list)
  * @param value The integer value to search for.
  * @return A pointer to the LLNode containing the value if found, otherwise NULL.
  */
-LLNode *search(const LinkedList *list, int value)
+LLNode *search(const LinkedList *list, const int value)
 {
+    if (list == NULL)
+        return NULL;
     LLNode *temp = list->head;
     while (temp != NULL)
     {
@@ -166,7 +170,7 @@ void traverse(const LinkedList *list)
  * @param list A pointer to the LinkedList.
  * @param value The integer value to insert.
  */
-void insertAtStart(LinkedList *list, int value)
+void insertAtStart(LinkedList *list, const int value)
 {
     if (list == NULL)
         return;
@@ -181,7 +185,7 @@ void insertAtStart(LinkedList *list, int value)
  * @param list A pointer to the LinkedList.
  * @param value The integer value to insert.
  */
-void insertAtEnd(LinkedList *list, int value)
+void insertAtEnd(LinkedList *list, const int value)
 {
     if (list == NULL)
         return;
@@ -205,7 +209,7 @@ void insertAtEnd(LinkedList *list, int value)
  * @param value The integer value to insert.
  * @param index The zero-based index at which to insert the new node.
  */
-void insertAtIndex(LinkedList *list, int value, int index)
+void insertAtIndex(LinkedList *list, const int value, const int index)
 {
     if (list == NULL)
         return;
@@ -235,7 +239,7 @@ void insertAtIndex(LinkedList *list, int value, int index)
  * @param oldVal The integer value after which to insert the new node.
  * @return 0 if insertion was successful, -1 if `oldVal` was not found or list is NULL.
  */
-int insertAfterValue(LinkedList *list, int newVal, int oldVal)
+int insertAfterValue(LinkedList *list, const int newVal, const int oldVal)
 {
     if (list == NULL)
         return -1;
@@ -301,7 +305,7 @@ int deleteEnd(LinkedList *list)
  * @param index The zero-based index of the node to delete.
  * @return The integer data of the deleted node, or -1 if the list is empty or NULL.
  */
-int deleteIndex(LinkedList *list, int index)
+int deleteIndex(LinkedList *list, const int index)
 {
     if (list == NULL || list->head == NULL)
         return -1;
@@ -326,7 +330,7 @@ int deleteIndex(LinkedList *list, int index)
  * @param value The integer value of the node to delete.
  * @return 0 if deletion was successful, -1 if the value was not found, list is empty or NULL.
  */
-int deleteValue(LinkedList *list, int value)
+int deleteValue(LinkedList *list, const int value)
 {
     if (list == NULL || list->head == NULL)
         return -1;
@@ -338,19 +342,19 @@ int deleteValue(LinkedList *list, int value)
         list->length--;
         return 0;
     }
-    LLNode *prevLLNode = list->head;
-    LLNode *currLLNode = list->head->next;
-    while (currLLNode != NULL)
+    LLNode *prevNode = list->head;
+    LLNode *currNode = list->head->next;
+    while (currNode != NULL)
     {
-        if (currLLNode->data == value)
+        if (currNode->data == value)
         {
-            prevLLNode->next = currLLNode->next;
-            free(currLLNode);
+            prevNode->next = currNode->next;
+            free(currNode);
             list->length--;
             return 0;
         }
-        prevLLNode = currLLNode;
-        currLLNode = currLLNode->next;
+        prevNode = currNode;
+        currNode = currNode->next;
     }
     return -1;
 }
