@@ -1,5 +1,5 @@
-#ifndef STRING_LIB_H
-#define STRING_LIB_H
+#ifndef STRING_H
+#define STRING_H
 
 #include <stdio.h>   // Required for perror and EXIT_FAILURE
 #include <stdlib.h>  // Required for malloc, realloc, free, and exit
@@ -1082,4 +1082,4 @@ String convert(int num, int base)
     return number;
 }
 
-#endif // STRING_LIB_H
+#endif // STRING_H

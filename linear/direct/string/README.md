@@ -89,12 +89,12 @@ The `adt_String.h` header file exposes the following public API functions:
 ## How to Compile and Run
 
 1.  **Download the Library**
-    Ensure you have the `adt_String.h` header file and the `test_string.c` test file (or your own application file) in your project directory.
+    Ensure you have the `adt_String.h` header file and the `test_String.c` test file (or your own application file) in your project directory.
 
     _Note: `adt_String.h` is designed as a header-only library, meaning all function implementations are directly within the header, simplifying compilation._
 
 2.  **Include the Header File**
-    In your C program (e.g., `my_program.c` or `test_string.c`), include the header:
+    In your C program (e.g., `test_String.c`), include the header:
 
     ```c
     #include "adt_String.h"
@@ -103,10 +103,10 @@ The `adt_String.h` header file exposes the following public API functions:
 3.  **Compile the Code**
     Use a C compiler like GCC. Since `adt_String.h` is header-only, you simply compile your main application file. No separate linking of library files is typically needed.
 
-    For example, to compile `test_string.c`:
+    For example, to compile `test_String.c`:
 
     ```bash
-    gcc -o test_string test_string.c -Wall -Wextra -std=c11
+    gcc -o test_String test_String.c -Wall -Wextra -std=c11
     ```
 
     _(Optional: Add `-g` for debugging symbols if needed.)_
@@ -115,7 +115,7 @@ The `adt_String.h` header file exposes the following public API functions:
     After successful compilation, execute the compiled program from your terminal:
 
     ```bash
-    ./test_string
+    ./test_String
     ```
 
 5.  **Example Program**

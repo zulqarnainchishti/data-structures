@@ -55,7 +55,7 @@ The `adt_Stack.h` header file exposes the following API functions:
 ## How to Compile and Run
 
 1. **Download the Library**
-   Ensure you have the `adt_Stack.h` file and a corresponding test program (e.g., `test_stack.c`) in the same directory.
+   Ensure you have the `adt_Stack.h` file and a corresponding test program (e.g., `test_Stack.c`) in the same directory.
 
 2. **Include the Header File**
    Add the following directive in your source file:
@@ -68,14 +68,14 @@ The `adt_Stack.h` header file exposes the following API functions:
    Use any standard C compiler to compile your program. Example using GCC:
 
    ```bash
-   gcc -o test_stack test_stack.c -Wall -Wextra -std=c11
+   gcc -o test_Stack test_Stack.c -Wall -Wextra -std=c11
    ```
 
 4. **Run the Executable**
    After successful compilation:
 
    ```bash
-   ./test_stack
+   ./test_Stack
    ```
 
 5. **Example Usage**

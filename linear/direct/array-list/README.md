@@ -8,14 +8,14 @@ ArrayList is a robust and feature-rich implementation of a dynamic array (often 
 
 - [Features](#features)
 - [Function Overview](#function-overview)
-  - [Core Management](#core-management)
-  - [Element Manipulation](#element-manipulation)
-  - [Data Transformation & Utilities](#data-transformation--utilities)
-  - [Search Algorithms](#search-algorithms)
-  - [Sorting Algorithms](#sorting-algorithms)
-  - [Functional Programming Inspired](#functional-programming-inspired)
+    - [Core Management](#core-management)
+    - [Element Manipulation](#element-manipulation)
+    - [Data Transformation & Utilities](#data-transformation--utilities)
+    - [Search Algorithms](#search-algorithms)
+    - [Sorting Algorithms](#sorting-algorithms)
+    - [Functional Programming Inspired](#functional-programming-inspired)
 - [How to Compile and Run](#how-to-compile-and-run)
-- [Limitations](#limitation)
+- [Limitations](#limitations)
 - [License](#license)
 - [Author](#author)
 
@@ -29,6 +29,8 @@ ArrayList is a robust and feature-rich implementation of a dynamic array (often 
 - **Memory Management:** Explicitly handles memory allocation and deallocation to prevent leaks.
 - **Header-Only Library:** Easy to integrate into other C projects by simply including the header file.
 
+---
+
 ## Functions Overview
 
 The `adt_ArrayList.h` header file exposes the following public API functions:
@@ -36,74 +38,77 @@ The `adt_ArrayList.h` header file exposes the following public API functions:
 ### Core Management
 
 - `ArrayList init(const int capacity)`: Initializes a new `ArrayList` with a specified initial capacity.
-- `void destroy(ArrayList *list)`: Deallocates all memory associated with the `ArrayList`.
-- `void clear(ArrayList *list)`: Resets the `ArrayList`'s length to 0, but retains its allocated capacity.
 - `bool isEmpty(const ArrayList list)`: Checks if the `ArrayList` contains no elements.
 - `bool isFull(const ArrayList list)`: Checks if the `ArrayList` has reached its current allocated capacity.
+- `ArrayList copy(const ArrayList list)`: Creates a deep copy of the `ArrayList`.
+- `ArrayList slice(const ArrayList list, const int start, const int end)`: Creates a new `ArrayList` containing a portion (slice) of the original.
+- `ArrayList join(const ArrayList front, const ArrayList rear)`: Concatenates two `ArrayLists` into a new one.
+- `void clear(ArrayList *const list)`: Resets the `ArrayList`'s length to 0, but retains its allocated capacity.
+- `void destroy(ArrayList *const list)`: Deallocates all memory associated with the `ArrayList`.
 - `void traverse(const ArrayList list)`: Prints the elements, length, and capacity of the `ArrayList`.
 
 ### Element Manipulation
 
-- `void append(ArrayList *list, int value)`: Adds an element to the end of the `ArrayList`.
-- `void insert(ArrayList *list, int value, int index)`: Inserts an element at a specific index, shifting subsequent elements.
-- `int pop(ArrayList *list)`: Removes and returns the last element.
-- `int discard(ArrayList *list, int index)`: Removes and returns the element at a specific index.
-- `int get(ArrayList list, int index)`: Retrieves the element at a specific index.
-- `void set(ArrayList *list, int value, int index)`: Sets the element at a specific index to a new value.
-- `void replace(ArrayList *list, int new, int old, int index)`: Replaces the first occurrence of `old` with `new`, starting the search from `index`.
+- `int get(const ArrayList list, const int index)`: Retrieves the element at a specific index.
+- `void set(ArrayList *const list, const int value, const int index)`: Sets the element at a specific index to a new value.
+- `void replace(ArrayList *const list, const int new, const int old, const int index)`: Replaces the first occurrence of `old` with `new`, starting the search from `index`.
+- `void append(ArrayList *const list, const int value)`: Adds an element to the end of the `ArrayList`.
+- `void insert(ArrayList *const list, const int value, const int index)`: Inserts an element at a specific index, shifting subsequent elements.
+- `int pop(ArrayList *const list)`: Removes and returns the last element.
+- `int discard(ArrayList *const list, const int index)`: Removes and returns the element at a specific index.
 
 ### Data Transformation & Utilities
 
-- `ArrayList copy(const ArrayList list)`: Creates a deep copy of the `ArrayList`.
-- `ArrayList slice(ArrayList list, int start, int end)`: Creates a new `ArrayList` containing a portion (slice) of the original.
-- `ArrayList join(const ArrayList front, const ArrayList rear)`: Concatenates two `ArrayLists` into a new one.
-- `void reverse(ArrayList *list)`: Reverses the order of elements in-place.
-- `void fill(ArrayList *list, const int quantity, const int value)`: Fills the list with a specified quantity of a given value.
-- `void randomize(ArrayList *list, const int quantity, const int min, const int max)`: Fills the list with random integers within a specified range.
-- `void shuffle(ArrayList *list)`: Randomly shuffles the elements in the `ArrayList` using Fisher-Yates algorithm.
+- `void fill(ArrayList *const list, const int quantity, const int value)`: Fills the list with a specified quantity of a given value.
+- `void reverse(ArrayList *const list)`: Reverses the order of elements in-place.
+- `void randomize(ArrayList *const list, const int quantity, const int min, const int max)`: Fills the list with random integers within a specified range.
+- `void shuffle(ArrayList *const list)`: Randomly shuffles the elements in the `ArrayList` using Fisher-Yates algorithm.
 
 ### Search Algorithms
 
-- `int linearSearch(ArrayList list, int value, int index)`: Finds an element by iterating sequentially from a starting index.
-- `int binarySearch(ArrayList list, int value, int index)`: Efficiently finds an element in a sorted list by repeatedly dividing the search interval in half.
-- `int ternarySearch(ArrayList list, int value, int index)`: Similar to binary search but divides the array into three parts.
-- `int interpolationSearch(ArrayList list, int value, int index)`: An improvement over binary search for uniformly distributed sorted data.
-- `int jumpSearch(ArrayList list, int value, int index)`: Reduces search time by jumping through fixed-size blocks.
+- `int linearSearch(const ArrayList list, const int value, const int index)`: Finds an element by iterating sequentially from a starting index.
+- `int binarySearch(const ArrayList list, const int value, const int index)`: Efficiently finds an element in a sorted list by repeatedly dividing the search interval in half.
+- `int ternarySearch(const ArrayList list, const int value, const int index)`: Similar to binary search but divides the array into three parts.
+- `int interpolationSearch(const ArrayList list, const int value, const int index)`: An improvement over binary search for uniformly distributed sorted data.
+- `int jumpSearch(const ArrayList list, const int value, const int index)`: Reduces search time by jumping through fixed-size blocks.
 
 ### Sorting Algorithms
 
-- `void bubbleSort(ArrayList *list)`: Simple comparison-based sort, repeatedly steps through the list.
-- `void selectionSort(ArrayList *list)`: Finds the minimum element from the unsorted part and puts it at the beginning.
-- `void insertionSort(ArrayList *list)`: Builds the final sorted array one item at a time.
-- `void countingSort(ArrayList *list)`: Non-comparison sort, effective for integer data within a limited range.
-- `void mergeSort(ArrayList *list)`: Divide and conquer algorithm, recursively divides and merges sorted halves.
-- `void quickSort(ArrayList *list)`: Divide and conquer algorithm, picks a pivot and partitions the array around it.
-- `void heapSort(ArrayList *list)`: Builds a max-heap and repeatedly extracts the maximum element.
+- `void bubbleSort(ArrayList *const list)`: Simple comparison-based sort, repeatedly steps through the list.
+- `void selectionSort(ArrayList *const list)`: Finds the minimum element from the unsorted part and puts it at the beginning.
+- `void insertionSort(ArrayList *const list)`: Builds the final sorted array one item at a time.
+- `void countSort(ArrayList *const list)`: Non-comparison sort, effective for integer data within a limited range.
+- `void radixSort(ArrayList *const list)`: Sorts non-negative integers by processing digits from least to most significant.
+- `void mergeSort(ArrayList *const list)`: Divide and conquer algorithm, recursively divides and merges sorted halves.
+- `void quickSort(ArrayList *const list)`: Divide and conquer algorithm, picks a pivot and partitions the array around it.
+- `void heapSort(ArrayList *const list)`: Builds a max-heap and repeatedly extracts the maximum element.
 
 ### Functional Programming Inspired
 
-- `void map(ArrayList *list, int (*func)(int))`: Applies a function to each element, transforming it in-place.
-- `void filter(ArrayList *list, bool (*func)(int))`: Retains only elements for which a predicate function returns true.
-- `bool any(ArrayList list)`: Returns true if at least one element is non-zero (truthy).
-- `bool all(ArrayList list)`: Returns true if all elements are non-zero (truthy).
-- `int max(ArrayList list)`: Returns the maximum value in the list.
-- `int min(ArrayList list)`: Returns the minimum value in the list.
-- `int sum(ArrayList list)`: Calculates the sum of all elements.
-- `int prod(ArrayList list)`: Calculates the product of all elements.
-- `int count(ArrayList list, int value)`: Counts occurrences of a specific value.
-- `bool contains(ArrayList list, int value)`: Checks if the list contains a specific value.
+- `void map(ArrayList *const list, int (*const func)(int))`: Applies a function to each element, transforming it in-place.
+- `void filter(ArrayList *const list, bool (*const func)(int))`: Retains only elements for which a predicate function returns true.
+- `bool any(const ArrayList list)`: Returns true if at least one element is non-zero (truthy).
+- `bool all(const ArrayList list)`: Returns true if all elements are non-zero (truthy).
+- `int max(const ArrayList list)`: Returns the maximum value in the list.
+- `int min(const ArrayList list)`: Returns the minimum value in the list.
+- `int sum(const ArrayList list)`: Calculates the sum of all elements.
+- `int prod(const ArrayList list)`: Calculates the product of all elements.
+- `int count(const ArrayList list, const int value)`: Counts occurrences of a specific value.
+- `bool contains(const ArrayList list, const int value)`: Checks if the list contains a specific value.
+
+---
 
 ## How to Compile and Run
 
 1.  **Download the Library**
 
-    To begin using the library, ensure you have the `adt_ArrayList.h` header file and the `test_arraylist.c` test file in your project directory.
+    To begin using the library, ensure you have the `adt_ArrayList.h` header file and the `test_ArrayList.c` test file in your project directory.
 
     _Note: `adt_ArrayList.h` is a header-only library, meaning all function implementations are directly in the header._
 
 2.  **Include the Header File**
 
-    In your C program (e.g., `my_program.c` or `test_arraylist.c`), include the header:
+    In your C program (e.g., `test_ArrayList.c`), include the header:
 
     ```c
     #include "adt_ArrayList.h"
@@ -111,20 +116,20 @@ The `adt_ArrayList.h` header file exposes the following public API functions:
 
 3.  **Compile the Code**
 
-    Since `adt_ArrayList.h` is a header-only library, you just need to compile your main application file (e.g., `test_arraylist.c`) and link against the math library. For example, if you're using GCC, compile your program like this:
+    Since `adt_ArrayList.h` is a header-only library, you just need to compile your main application file (e.g., `test_ArrayList.c`) and link against the math library. For example, if you're using GCC, compile your program like this:
 
     ```bash
-    gcc -o test_arraylist test_arraylist.c -lm
+    gcc -o test_ArrayList test_ArrayList.c -lm
     ```
 
-    _This command will compile your source file (`test_arraylist.c`) and link it with the necessary math functions to produce the final executable (`test_arraylist`)._
+    _This command will compile your source file (`test_ArrayList.c`) and link it with the necessary math functions to produce the final executable (`test_ArrayList`)._
 
 4.  **Run the Executable**
 
     After successful compilation, run the program from the terminal:
 
     ```bash
-    ./test_arraylist
+    ./test_ArrayList
     ```
 
 5.  **Example Program**
@@ -159,6 +164,8 @@ The `adt_ArrayList.h` header file exposes the following public API functions:
     }
     ```
 
+---
+
 ## Limitations
 
 - **Fixed Data Type (Integers Only):** This implementation is specifically designed to store `int` type elements. Modifying it to store other data types (e.g., `float`, `char`, or custom structs) would require changing the `typedef` and `sizeof` operations throughout the code.
@@ -166,9 +173,13 @@ The `adt_ArrayList.h` header file exposes the following public API functions:
 - **No Iterator Support:** The ADT does not expose explicit iterator mechanisms like those found in C++ STL containers. Traversal and manipulation are done via direct index access or the provided helper functions.
 - **Complexity Trade-offs:** While various algorithms are provided, the implementation prioritizes clarity and directness, not necessarily the absolute most optimized version of each algorithm (e.g., in-place merge sort is more complex than one using auxiliary arrays).
 
+---
+
 ## License
 
 This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+---
 
 ## Author
 

@@ -78,7 +78,7 @@ void test_init_and_destroy()
 
 void test_append_and_expand()
 {
-    printf("\n--- Test: append() and __expand__() ---\n");
+    printf("\n--- Test: append() and automatic expansion ---\n"); // Updated description
     ArrayList list = init(2);
     append(&list, 10);
     print_test_status("append(10) - length should be 1", list.length == 1);
@@ -152,7 +152,7 @@ void test_insert_and_discard()
     print_test_status("pop() - length should be 3", list.length == 3);
     traverse(list);
 
-    discarded_val = pop(&list); // Pop 30: [10, 20]
+    pop(&list); // Pop 30: [10, 20]
     pop(&list);
     pop(&list); // Pop 20, then 10, list should be empty
     print_test_status("pop() on empty list should return -1", pop(&list) == -1);
@@ -486,7 +486,7 @@ void test_sorting_algorithms()
     printf("Bubble Sort - Original Small: ");
     traverse(bubble_list);
     bubbleSort(&bubble_list);
-    printf("Bubble Sort - Sorted Small:   ");
+    printf("Bubble Sort - Sorted Small:   ");
     traverse(bubble_list);
     print_test_status("bubbleSort (small) - is sorted", is_sorted(bubble_list));
     destroy(&bubble_list);
@@ -498,7 +498,7 @@ void test_sorting_algorithms()
     end_time = clock();
     cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     print_test_status("bubbleSort (medium) - is sorted", is_sorted(bubble_list));
-    printf("  -> Bubble Sort (medium) took %f seconds\n", cpu_time_used);
+    printf("  -> Bubble Sort (medium) took %f seconds\n", cpu_time_used);
     destroy(&bubble_list);
 
     // --- Test Selection Sort ---
@@ -507,7 +507,7 @@ void test_sorting_algorithms()
     printf("Selection Sort - Original Small: ");
     traverse(selection_list);
     selectionSort(&selection_list);
-    printf("Selection Sort - Sorted Small:   ");
+    printf("Selection Sort - Sorted Small:   ");
     traverse(selection_list);
     print_test_status("selectionSort (small) - is sorted", is_sorted(selection_list));
     destroy(&selection_list);
@@ -519,7 +519,7 @@ void test_sorting_algorithms()
     end_time = clock();
     cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     print_test_status("selectionSort (medium) - is sorted", is_sorted(selection_list));
-    printf("  -> Selection Sort (medium) took %f seconds\n", cpu_time_used);
+    printf("  -> Selection Sort (medium) took %f seconds\n", cpu_time_used);
     destroy(&selection_list);
 
     // --- Test Insertion Sort ---
@@ -528,7 +528,7 @@ void test_sorting_algorithms()
     printf("Insertion Sort - Original Small: ");
     traverse(insertion_list);
     insertionSort(&insertion_list);
-    printf("Insertion Sort - Sorted Small:   ");
+    printf("Insertion Sort - Sorted Small:   ");
     traverse(insertion_list);
     print_test_status("insertionSort (small) - is sorted", is_sorted(insertion_list));
     destroy(&insertion_list);
@@ -540,7 +540,7 @@ void test_sorting_algorithms()
     end_time = clock();
     cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     print_test_status("insertionSort (medium) - is sorted", is_sorted(insertion_list));
-    printf("  -> Insertion Sort (medium) took %f seconds\n", cpu_time_used);
+    printf("  -> Insertion Sort (medium) took %f seconds\n", cpu_time_used);
     destroy(&insertion_list);
 
     // --- Test Counting Sort ---
@@ -548,8 +548,8 @@ void test_sorting_algorithms()
     randomize(&counting_list, TEST_SIZE_SMALL, 0, 100); // Small range needed for efficiency
     printf("Counting Sort - Original Small: ");
     traverse(counting_list);
-    countingSort(&counting_list);
-    printf("Counting Sort - Sorted Small:   ");
+    countSort(&counting_list);
+    printf("Counting Sort - Sorted Small:   ");
     traverse(counting_list);
     print_test_status("countingSort (small) - is sorted", is_sorted(counting_list));
     destroy(&counting_list);
@@ -557,12 +557,33 @@ void test_sorting_algorithms()
     counting_list = init(TEST_SIZE_LARGE);                 // Counting sort excels with fixed range
     randomize(&counting_list, TEST_SIZE_LARGE, -500, 500); // Test negative numbers
     start_time = clock();
-    countingSort(&counting_list);
+    countSort(&counting_list);
     end_time = clock();
     cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     print_test_status("countingSort (large) - is sorted", is_sorted(counting_list));
-    printf("  -> Counting Sort (large) took %f seconds\n", cpu_time_used);
+    printf("  -> Counting Sort (large) took %f seconds\n", cpu_time_used);
     destroy(&counting_list);
+
+    // --- Test Radix Sort ---
+    ArrayList radix_list = init(TEST_SIZE_SMALL);
+    randomize(&radix_list, TEST_SIZE_SMALL, 0, 1000); // Radix sort works well with larger ranges of non-negative ints
+    printf("Radix Sort - Original Small: ");
+    traverse(radix_list);
+    radixSort(&radix_list);
+    printf("Radix Sort - Sorted Small:   ");
+    traverse(radix_list);
+    print_test_status("radixSort (small) - is sorted", is_sorted(radix_list));
+    destroy(&radix_list);
+
+    radix_list = init(TEST_SIZE_LARGE);
+    randomize(&radix_list, TEST_SIZE_LARGE, 0, 100000); // Test large range with non-negative numbers
+    start_time = clock();
+    radixSort(&radix_list);
+    end_time = clock();
+    cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
+    print_test_status("radixSort (large) - is sorted", is_sorted(radix_list));
+    printf("  -> Radix Sort (large) took %f seconds\n", cpu_time_used);
+    destroy(&radix_list);
 
     // --- Test Merge Sort ---
     ArrayList merge_list = init(TEST_SIZE_SMALL);
@@ -570,7 +591,7 @@ void test_sorting_algorithms()
     printf("Merge Sort - Original Small: ");
     traverse(merge_list);
     mergeSort(&merge_list);
-    printf("Merge Sort - Sorted Small:   ");
+    printf("Merge Sort - Sorted Small:   ");
     traverse(merge_list);
     print_test_status("mergeSort (small) - is sorted", is_sorted(merge_list));
     destroy(&merge_list);
@@ -582,7 +603,7 @@ void test_sorting_algorithms()
     end_time = clock();
     cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     print_test_status("mergeSort (large) - is sorted", is_sorted(merge_list_large));
-    printf("  -> Merge Sort (large) took %f seconds\n", cpu_time_used);
+    printf("  -> Merge Sort (large) took %f seconds\n", cpu_time_used);
     destroy(&merge_list_large);
 
     // --- Test Quick Sort ---
@@ -591,7 +612,7 @@ void test_sorting_algorithms()
     printf("Quick Sort - Original Small: ");
     traverse(quick_list);
     quickSort(&quick_list);
-    printf("Quick Sort - Sorted Small:   ");
+    printf("Quick Sort - Sorted Small:   ");
     traverse(quick_list);
     print_test_status("quickSort (small) - is sorted", is_sorted(quick_list));
     destroy(&quick_list);
@@ -603,7 +624,7 @@ void test_sorting_algorithms()
     end_time = clock();
     cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     print_test_status("quickSort (large) - is sorted", is_sorted(quick_list_large));
-    printf("  -> Quick Sort (large) took %f seconds\n", cpu_time_used);
+    printf("  -> Quick Sort (large) took %f seconds\n", cpu_time_used);
     destroy(&quick_list_large);
 
     // --- Test Heap Sort ---
@@ -612,7 +633,7 @@ void test_sorting_algorithms()
     printf("Heap Sort - Original Small: ");
     traverse(heap_list);
     heapSort(&heap_list);
-    printf("Heap Sort - Sorted Small:   ");
+    printf("Heap Sort - Sorted Small:   ");
     traverse(heap_list);
     print_test_status("heapSort (small) - is sorted", is_sorted(heap_list));
     destroy(&heap_list);
@@ -624,7 +645,7 @@ void test_sorting_algorithms()
     end_time = clock();
     cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
     print_test_status("heapSort (large) - is sorted", is_sorted(heap_list_large));
-    printf("  -> Heap Sort (large) took %f seconds\n", cpu_time_used);
+    printf("  -> Heap Sort (large) took %f seconds\n", cpu_time_used);
     destroy(&heap_list_large);
 }
 

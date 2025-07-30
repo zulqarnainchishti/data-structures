@@ -99,10 +99,10 @@ ArrayList copy(const ArrayList list)
  * @param end The ending index (exclusive).
  * @return A new ArrayList representing the slice. Returns an empty list if indices are invalid.
  */
-ArrayList slice(ArrayList list, int start, int end)
+ArrayList slice(const ArrayList list, const int start, const int end)
 {
     if (start < 0 || end > list.length || start > end)
-        return init(0); // Return an empty list for invalid slice parameters
+        return init(0);
     ArrayList sliced = init(end - start);
     for (int i = start; i < end; i++)
     {
@@ -132,7 +132,7 @@ ArrayList join(const ArrayList front, const ArrayList rear)
  * Does not deallocate the underlying array memory.
  * @param list A pointer to the ArrayList to clear.
  */
-void clear(ArrayList *list)
+void clear(ArrayList *const list)
 {
     if (list == NULL)
         return;
@@ -144,7 +144,7 @@ void clear(ArrayList *list)
  * Sets the array pointer to NULL and resets length and capacity.
  * @param list A pointer to the ArrayList to destroy.
  */
-void destroy(ArrayList *list)
+void destroy(ArrayList *const list)
 {
     if (list == NULL)
         return;
@@ -173,10 +173,10 @@ void traverse(const ArrayList list)
  * @param index The index of the element to retrieve.
  * @return The value at the specified index, or -1 if the index is invalid.
  */
-int get(ArrayList list, int index)
+int get(const ArrayList list, const int index)
 {
     if (index < 0 || index >= list.length)
-        return -1; // Indicate error/invalid index
+        return -1;
     return list.array[index];
 }
 
@@ -186,7 +186,7 @@ int get(ArrayList list, int index)
  * @param value The new value to set.
  * @param index The index at which to set the value.
  */
-void set(ArrayList *list, int value, int index)
+void set(ArrayList *const list, const int value, const int index)
 {
     if (list == NULL || index < 0 || index >= list->length)
         return;
@@ -200,7 +200,7 @@ void set(ArrayList *list, int value, int index)
  * @param old The value to be replaced.
  * @param index The starting index to begin the search.
  */
-void replace(ArrayList *list, int new, int old, int index)
+void replace(ArrayList *const list, const int new, const int old, const int index)
 {
     if (list == NULL || index >= list->length)
         return;
@@ -210,7 +210,7 @@ void replace(ArrayList *list, int new, int old, int index)
         if (list->array[i] == old)
         {
             list->array[i] = new;
-            return; // Replace only the first occurrence
+            return;
         }
     }
 }
@@ -221,7 +221,7 @@ void replace(ArrayList *list, int new, int old, int index)
  * @param list A pointer to the ArrayList to expand.
  * @note Exits with an error if memory reallocation fails.
  */
-void __expand__(ArrayList *list)
+void __expand__(ArrayList *const list)
 {
     int newCapacity = (list->capacity == 0) ? 1 : list->capacity * 2;
     int *newArray = (int *)realloc(list->array, newCapacity * sizeof(int));
@@ -240,7 +240,7 @@ void __expand__(ArrayList *list)
  * @param list A pointer to the ArrayList to modify.
  * @param value The value to append.
  */
-void append(ArrayList *list, int value)
+void append(ArrayList *const list, const int value)
 {
     if (list == NULL)
         return;
@@ -257,7 +257,7 @@ void append(ArrayList *list, int value)
  * @param value The value to insert.
  * @param index The index at which to insert the value.
  */
-void insert(ArrayList *list, int value, int index)
+void insert(ArrayList *const list, const int value, const int index)
 {
     if (list == NULL || index < 0 || index > list->length)
         return;
@@ -274,7 +274,7 @@ void insert(ArrayList *list, int value, int index)
  * @param list A pointer to the ArrayList to modify.
  * @return The value of the popped element, or -1 if the list is empty.
  */
-int pop(ArrayList *list)
+int pop(ArrayList *const list)
 {
     if (list == NULL || isEmpty(*list))
         return -1;
@@ -288,7 +288,7 @@ int pop(ArrayList *list)
  * @param index The index of the element to discard.
  * @return The value of the discarded element, or -1 if the index is invalid or list is empty.
  */
-int discard(ArrayList *list, int index)
+int discard(ArrayList *const list, const int index)
 {
     if (list == NULL || isEmpty(*list) || index < 0 || index >= list->length)
         return -1;
@@ -306,11 +306,11 @@ int discard(ArrayList *list, int index)
  * @param quantity The number of elements to fill.
  * @param value The value to fill the list with.
  */
-void fill(ArrayList *list, const int quantity, const int value)
+void fill(ArrayList *const list, const int quantity, const int value)
 {
     if (list == NULL || quantity < 0)
         return;
-    clear(list); // Clear existing elements
+    clear(list);
     for (int i = 0; i < quantity; i++)
         append(list, value);
 }
@@ -319,7 +319,7 @@ void fill(ArrayList *list, const int quantity, const int value)
  * @brief Reverses the order of elements in the ArrayList in-place.
  * @param list A pointer to the ArrayList to modify.
  */
-void reverse(ArrayList *list)
+void reverse(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
@@ -329,11 +329,10 @@ void reverse(ArrayList *list)
 
 /**
  * @brief Seeds the random number generator once.
- * Internal helper function to ensure randomness.
  */
 void __seeding__()
 {
-    static int seeded = 0; // Static variable to ensure seeding happens only once
+    static int seeded = 0;
     if (!seeded)
     {
         srand((unsigned int)time(NULL));
@@ -350,12 +349,12 @@ void __seeding__()
  * @param min The minimum value (inclusive) for random numbers.
  * @param max The maximum value (exclusive) for random numbers.
  */
-void randomize(ArrayList *list, const int quantity, const int min, const int max)
+void randomize(ArrayList *const list, const int quantity, const int min, const int max)
 {
     if (list == NULL || quantity < 0 || min >= max)
         return;
-    __seeding__(); // Ensure srand is called
-    clear(list);   // Clear existing elements
+    __seeding__();
+    clear(list);
     for (int i = 0; i < quantity; i++)
         append(list, rand() % (max - min) + min);
 }
@@ -365,14 +364,14 @@ void randomize(ArrayList *list, const int quantity, const int min, const int max
  * Uses the Fisher-Yates (Knuth) shuffle algorithm.
  * @param list A pointer to the ArrayList to shuffle.
  */
-void shuffle(ArrayList *list)
+void shuffle(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
-    __seeding__(); // Ensure srand is called
+    __seeding__();
     for (int i = list->length - 1; i > 0; i--)
     {
-        int j = rand() % (i + 1); // Generate a random index from 0 to i
+        int j = rand() % (i + 1);
         __swap__(&list->array[i], &list->array[j]);
     }
 }
@@ -386,7 +385,7 @@ void shuffle(ArrayList *list)
  * @param index The starting index for the search (inclusive).
  * @return The index of the first occurrence of the value, or -1 if not found or invalid index.
  */
-int linearSearch(ArrayList list, int value, int index)
+int linearSearch(const ArrayList list, const int value, const int index)
 {
     if (index < 0 || index >= list.length)
         return -1;
@@ -407,7 +406,7 @@ int linearSearch(ArrayList list, int value, int index)
  * @param index The starting index for the search (inclusive).
  * @return The index of the value, or -1 if not found or invalid index.
  */
-int binarySearch(ArrayList list, int value, int index)
+int binarySearch(const ArrayList list, const int value, const int index)
 {
     if (index < 0 || index >= list.length)
         return -1;
@@ -416,7 +415,7 @@ int binarySearch(ArrayList list, int value, int index)
     int end = list.length - 1;
     while (start <= end)
     {
-        int mid = start + (end - start) / 2; // Prevents potential overflow compared to (start + end) / 2
+        int mid = start + (end - start) / 2;
         if (list.array[mid] == value)
             return mid;
         else if (list.array[mid] < value)
@@ -435,7 +434,7 @@ int binarySearch(ArrayList list, int value, int index)
  * @param index The starting index for the search (inclusive).
  * @return The index of the value, or -1 if not found or invalid index.
  */
-int ternarySearch(ArrayList list, int value, int index)
+int ternarySearch(const ArrayList list, const int value, const int index)
 {
     if (index < 0 || index >= list.length)
         return -1;
@@ -457,7 +456,7 @@ int ternarySearch(ArrayList list, int value, int index)
         else if (value > list.array[mid2])
             start = mid2 + 1;
         else
-        { // value is between mid1 and mid2
+        {
             start = mid1 + 1;
             end = mid2 - 1;
         }
@@ -473,7 +472,7 @@ int ternarySearch(ArrayList list, int value, int index)
  * @param index The starting index for the search (inclusive).
  * @return The index of the value, or -1 if not found or invalid index.
  */
-int interpolationSearch(ArrayList list, int value, int index)
+int interpolationSearch(const ArrayList list, const int value, const int index)
 {
     if (index < 0 || index >= list.length)
         return -1;
@@ -482,14 +481,11 @@ int interpolationSearch(ArrayList list, int value, int index)
     int end = list.length - 1;
     while (start <= end && value >= list.array[start] && value <= list.array[end])
     {
-        // Avoid division by zero when start and end elements are the same
         if (list.array[start] == list.array[end])
             break;
 
-        // Calculate the probe position
         int pos = start + (int)(((double)(end - start) * (value - list.array[start])) / (list.array[end] - list.array[start]));
 
-        // Check if the calculated position is within bounds
         if (pos < start || pos > end)
             break;
 
@@ -500,7 +496,6 @@ int interpolationSearch(ArrayList list, int value, int index)
         else
             end = pos - 1;
     }
-    // If the value is at start and loop breaks early due to start/end equality
     if (start <= end && list.array[start] == value)
     {
         return start;
@@ -516,27 +511,24 @@ int interpolationSearch(ArrayList list, int value, int index)
  * @param index The starting index for the search (inclusive).
  * @return The index of the value, or -1 if not found or invalid index.
  */
-int jumpSearch(ArrayList list, int value, int index)
+int jumpSearch(const ArrayList list, const int value, const int index)
 {
     if (index < 0 || index >= list.length)
         return -1;
 
-    int jump = (int)sqrt(list.length); // Optimal block size
+    int jump = (int)sqrt(list.length);
     int start = index;
     int end = start + jump;
 
-    // Find the block where the element might be present
     while (end < list.length && list.array[end] <= value)
     {
         start = end;
         end += jump;
     }
 
-    // Adjust 'end' if it overshoots the list length
     if (end > list.length)
         end = list.length;
 
-    // Perform linear search in the identified block
     for (int i = start; i < end; i++)
         if (list.array[i] == value)
             return i;
@@ -547,17 +539,15 @@ int jumpSearch(ArrayList list, int value, int index)
 
 /**
  * @brief Sorts the ArrayList using the Bubble Sort algorithm.
- * Compares adjacent elements and swaps them if they are in the wrong order.
- * Repeats until no swaps are needed.
  * @param list A pointer to the ArrayList to sort.
  */
-void bubbleSort(ArrayList *list)
+void bubbleSort(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
     for (int i = 1; i < list->length; i++)
     {
-        bool isSorted = true; // Optimization: if no swaps, array is sorted
+        bool isSorted = true;
         for (int j = 0; j < list->length - i; j++)
         {
             if (list->array[j] > list->array[j + 1])
@@ -573,11 +563,9 @@ void bubbleSort(ArrayList *list)
 
 /**
  * @brief Sorts the ArrayList using the Selection Sort algorithm.
- * Repeatedly finds the minimum element from the unsorted part
- * and puts it at the beginning of the sorted part.
  * @param list A pointer to the ArrayList to sort.
  */
-void selectionSort(ArrayList *list)
+void selectionSort(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
@@ -589,19 +577,16 @@ void selectionSort(ArrayList *list)
             if (list->array[j] < list->array[minIndex])
                 minIndex = j;
         }
-        if (minIndex != i) // Swap if the minimum element is not already in place
+        if (minIndex != i)
             __swap__(&list->array[i], &list->array[minIndex]);
     }
 }
 
 /**
  * @brief Sorts the ArrayList using the Insertion Sort algorithm.
- * Builds the final sorted array one item at a time.
- * It iterates through the input elements and inserts each element
- * into its correct position in the already sorted part.
  * @param list A pointer to the ArrayList to sort.
  */
-void insertionSort(ArrayList *list)
+void insertionSort(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
@@ -609,8 +594,6 @@ void insertionSort(ArrayList *list)
     {
         int curr = list->array[i];
         int j = i - 1;
-        // Move elements of list->array[0..i-1], that are greater than curr,
-        // to one position ahead of their current position
         while (j >= 0 && list->array[j] > curr)
         {
             list->array[j + 1] = list->array[j];
@@ -621,19 +604,18 @@ void insertionSort(ArrayList *list)
 }
 
 /**
- * @brief Sorts the ArrayList using the Counting Sort algorithm.
- * It is an efficient sorting algorithm for integers when the range
- * of input numbers is not significantly larger than the number of items.
- * @param list A pointer to the ArrayList to sort.
- * @note This algorithm is stable and non-comparison based.
- * @note Exits with an error if memory allocation fails for counting or result arrays.
+ * @brief Sorts an ArrayList using the Counting Sort algorithm.
+ *
+ * Efficient for lists with a limited range of integer keys. It's a stable sort.
+ * Assumes all elements are non-negative.
+ *
+ * @param list A pointer to the ArrayList to be sorted.
  */
-void countingSort(ArrayList *list)
+void countSort(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
 
-    // Find min and max elements to determine the range
     int min = list->array[0];
     int max = list->array[0];
     for (int i = 1; i < list->length; i++)
@@ -645,46 +627,87 @@ void countingSort(ArrayList *list)
     }
 
     int range = max - min + 1;
-    // Create a counting array, initialized to zeros
-    int *counting = (int *)calloc(range, sizeof(int));
-    if (counting == NULL)
+
+    int *counter = (int *)calloc(range, sizeof(int));
+    if (counter == NULL)
     {
-        perror("Failed to allocate memory for Counting Array");
+        perror("Failed to allocate memory for Counter Array in countSort");
         exit(EXIT_FAILURE);
     }
 
-    // Store count of each character
     for (int i = 0; i < list->length; i++)
-        counting[list->array[i] - min]++;
+        counter[list->array[i] - min]++;
 
-    // Change counting[i] so that counting[i] now contains actual
-    // position of this character in output array
     for (int i = 1; i < range; i++)
-        counting[i] += counting[i - 1];
+        counter[i] += counter[i - 1];
 
-    // Build the output array
     int *result = (int *)malloc(list->length * sizeof(int));
     if (result == NULL)
     {
-        perror("Failed to allocate memory for Result Array");
-        free(counting); // Clean up allocated memory before exiting
+        perror("Failed to allocate memory for Result Array in countSort");
+        free(counter);
         exit(EXIT_FAILURE);
     }
 
-    // Iterate from the end to maintain stability
     for (int i = list->length - 1; i >= 0; i--)
     {
         int val = list->array[i];
-        result[--counting[val - min]] = val;
+        result[--counter[val - min]] = val;
     }
 
-    // Copy the sorted elements back to the original list
     for (int i = 0; i < list->length; i++)
         list->array[i] = result[i];
 
-    // Free the auxiliary arrays
-    free(counting);
+    free(counter);
     free(result);
+}
+
+/**
+ * @brief Sorts an ArrayList using the Radix Sort algorithm (LSD).
+ *
+ * Sorts non-negative integers by processing digits from least to most significant.
+ * Uses Counting Sort as a stable subroutine for each digit pass.
+ *
+ * @param list A pointer to the ArrayList to be sorted.
+ */
+void radixSort(ArrayList *const list)
+{
+    if (list == NULL || list->length <= 1)
+        return;
+
+    int max = list->array[0];
+    for (int i = 1; i < list->length; i++)
+        if (list->array[i] > max)
+            max = list->array[i];
+
+    for (int place = 1; max / place > 0; place *= 10)
+    {
+        int counter[10] = {0};
+
+        for (int i = 0; i < list->length; i++)
+            counter[(list->array[i] / place) % 10]++;
+
+        for (int i = 1; i < 10; i++)
+            counter[i] += counter[i - 1];
+
+        int *result = (int *)malloc(list->length * sizeof(int));
+        if (result == NULL)
+        {
+            perror("Failed to allocate memory for Result Array in radixSort");
+            exit(EXIT_FAILURE);
+        }
+
+        for (int i = list->length - 1; i >= 0; i--)
+        {
+            int digit = (list->array[i] / place) % 10;
+            result[--counter[digit]] = list->array[i];
+        }
+
+        for (int i = 0; i < list->length; i++)
+            list->array[i] = result[i];
+
+        free(result);
+    }
 }
 
 /**
@@ -694,11 +717,10 @@ void countingSort(ArrayList *list)
  * @param left A pointer to the left sorted ArrayList.
  * @param right A pointer to the right sorted ArrayList.
  */
-void __merge__(ArrayList *list, const ArrayList *left, const ArrayList *right)
+void __merge__(ArrayList *const list, const ArrayList *const left, const ArrayList *const right)
 {
     int l = 0, r = 0, i = 0;
 
-    // Compare elements from left and right lists and place the smaller one into 'list'
     while (l < left->length && r < right->length)
     {
         if (left->array[l] <= right->array[r])
@@ -707,10 +729,8 @@ void __merge__(ArrayList *list, const ArrayList *left, const ArrayList *right)
             list->array[i++] = right->array[r++];
     }
 
-    // Copy any remaining elements from the left list
     while (l < left->length)
         list->array[i++] = left->array[l++];
-    // Copy any remaining elements from the right list
     while (r < right->length)
         list->array[i++] = right->array[r++];
 }
@@ -721,24 +741,20 @@ void __merge__(ArrayList *list, const ArrayList *left, const ArrayList *right)
  * into halves, sorts them, and then merges the sorted halves.
  * @param list A pointer to the ArrayList to sort.
  */
-void mergeSort(ArrayList *list)
+void mergeSort(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
 
     int mid = list->length / 2;
-    // Create left and right sub-lists (slices)
     ArrayList left = slice(*list, 0, mid);
     ArrayList right = slice(*list, mid, list->length);
 
-    // Recursively sort the sub-lists
     mergeSort(&left);
     mergeSort(&right);
 
-    // Merge the sorted sub-lists back into the original list
     __merge__(list, &left, &right);
 
-    // Free the memory allocated for the temporary left and right sub-lists
     destroy(&left);
     destroy(&right);
 }
@@ -751,21 +767,18 @@ void mergeSort(ArrayList *list)
  * @param start The starting index of the sub-array to partition.
  * @param end The ending index of the sub-array to partition.
  */
-void __partition__(ArrayList *list, int start, int end)
+void __partition__(ArrayList *const list, const int start, const int end)
 {
-    // Base case: if the sub-array has 0 or 1 element, it's already sorted
     if (end - start <= 0)
         return;
 
-    int pivot = list->array[end]; // Choosing the last element as pivot
-    int i = start - 1;            // Index of smaller element
+    int pivot = list->array[end];
+    int i = start - 1;
 
-    // Iterate through the sub-array
     for (int j = start; j <= end; j++)
         if (list->array[j] <= pivot)
-            __swap__(&list->array[++i], &list->array[j]); // Move smaller elements to the left of 'i'
+            __swap__(&list->array[++i], &list->array[j]);
 
-    // Recursively sort the sub-arrays to the left and right of the pivot
     __partition__(list, start, i - 1);
     __partition__(list, i + 1, end);
 }
@@ -776,7 +789,7 @@ void __partition__(ArrayList *list, int start, int end)
  * and partitions the array around the picked pivot.
  * @param list A pointer to the ArrayList to sort.
  */
-void quickSort(ArrayList *list)
+void quickSort(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
@@ -790,25 +803,21 @@ void quickSort(ArrayList *list)
  * @param size The current size of the heap (portion of the array).
  * @param index The root index of the sub-tree to heapify.
  */
-void __heapify__(ArrayList *list, int size, int index)
+void __heapify__(ArrayList *const list, const int size, const int index)
 {
-    int largest = index;       // Initialize largest as root
-    int left = 2 * index + 1;  // Left child
-    int right = 2 * index + 2; // Right child
+    int largest = index;
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
 
-    // If left child is larger than root
     if (left < size && list->array[left] > list->array[largest])
         largest = left;
 
-    // If right child is larger than largest so far
     if (right < size && list->array[right] > list->array[largest])
         largest = right;
 
-    // If largest is not root
     if (largest != index)
     {
         __swap__(&list->array[index], &list->array[largest]);
-        // Recursively heapify the affected sub-tree
         __heapify__(list, size, largest);
     }
 }
@@ -820,21 +829,17 @@ void __heapify__(ArrayList *list, int size, int index)
  * and places it at the end of the array.
  * @param list A pointer to the ArrayList to sort.
  */
-void heapSort(ArrayList *list)
+void heapSort(ArrayList *const list)
 {
     if (list == NULL || list->length <= 1)
         return;
 
-    // Build max heap (rearrange array)
     for (int i = list->length / 2 - 1; i >= 0; i--)
         __heapify__(list, list->length, i);
 
-    // One by one extract elements from heap
     for (int i = list->length - 1; i > 0; i--)
     {
-        // Move current root to end
         __swap__(&list->array[0], &list->array[i]);
-        // Call max heapify on the reduced heap
         __heapify__(list, i, 0);
     }
 }
@@ -847,7 +852,7 @@ void heapSort(ArrayList *list)
  * @param list A pointer to the ArrayList to modify.
  * @param func A pointer to a function that takes an int and returns an int.
  */
-void map(ArrayList *list, int (*func)(int))
+void map(ArrayList *const list, int (*const func)(int))
 {
     for (int i = 0; i < list->length; i++)
         list->array[i] = func(list->array[i]);
@@ -859,13 +864,13 @@ void map(ArrayList *list, int (*func)(int))
  * @param list A pointer to the ArrayList to modify.
  * @param func A pointer to a function that takes an int and returns a bool.
  */
-void filter(ArrayList *list, bool (*func)(int))
+void filter(ArrayList *const list, bool (*const func)(int))
 {
-    int index = 0; // New index for filtered elements
+    int index = 0;
     for (int i = 0; i < list->length; i++)
         if (func(list->array[i]))
-            list->array[index++] = list->array[i]; // Keep element if func returns true
-    list->length = index;                          // Update length to the number of filtered elements
+            list->array[index++] = list->array[i];
+    list->length = index;
 }
 
 /**
@@ -873,10 +878,10 @@ void filter(ArrayList *list, bool (*func)(int))
  * @param list The ArrayList to check.
  * @return True if at least one element is non-zero, false otherwise.
  */
-bool any(ArrayList list)
+bool any(const ArrayList list)
 {
     for (int i = 0; i < list.length; i++)
-        if (list.array[i]) // If any element is non-zero
+        if (list.array[i])
             return true;
     return false;
 }
@@ -886,10 +891,10 @@ bool any(ArrayList list)
  * @param list The ArrayList to check.
  * @return True if all elements are non-zero, false otherwise.
  */
-bool all(ArrayList list)
+bool all(const ArrayList list)
 {
     for (int i = 0; i < list.length; i++)
-        if (!list.array[i]) // If any element is zero
+        if (!list.array[i])
             return false;
     return true;
 }
@@ -899,10 +904,10 @@ bool all(ArrayList list)
  * @param list The ArrayList to search.
  * @return The maximum value, or -1 if the list is empty.
  */
-int max(ArrayList list)
+int max(const ArrayList list)
 {
     if (isEmpty(list))
-        return -1; // Or throw an error, depending on desired behavior for empty list
+        return -1;
     int maximum = list.array[0];
     for (int i = 1; i < list.length; i++)
         if (maximum < list.array[i])
@@ -915,10 +920,10 @@ int max(ArrayList list)
  * @param list The ArrayList to search.
  * @return The minimum value, or -1 if the list is empty.
  */
-int min(ArrayList list)
+int min(const ArrayList list)
 {
     if (isEmpty(list))
-        return -1; // Or throw an error, depending on desired behavior for empty list
+        return -1;
     int minimum = list.array[0];
     for (int i = 1; i < list.length; i++)
         if (minimum > list.array[i])
@@ -931,7 +936,7 @@ int min(ArrayList list)
  * @param list The ArrayList to sum.
  * @return The sum of the elements.
  */
-int sum(ArrayList list)
+int sum(const ArrayList list)
 {
     int total = 0;
     for (int i = 0; i < list.length; i++)
@@ -944,7 +949,7 @@ int sum(ArrayList list)
  * @param list The ArrayList to process.
  * @return The product of the elements.
  */
-int prod(ArrayList list)
+int prod(const ArrayList list)
 {
     int product = 1;
     for (int i = 0; i < list.length; i++)
@@ -958,7 +963,7 @@ int prod(ArrayList list)
  * @param value The value to count.
  * @return The number of times the value appears in the list.
  */
-int count(ArrayList list, int value)
+int count(const ArrayList list, const int value)
 {
     int freq = 0;
     for (int i = 0; i < list.length; i++)
@@ -973,7 +978,7 @@ int count(ArrayList list, int value)
  * @param value The value to check for.
  * @return True if the value is found, false otherwise.
  */
-bool contains(ArrayList list, int value)
+bool contains(const ArrayList list, const int value)
 {
     for (int i = 0; i < list.length; i++)
         if (list.array[i] == value)
