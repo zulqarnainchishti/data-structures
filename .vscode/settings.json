@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "adt_circularlinkedlist.h": "c",
+    "string.h": "c"
+  }
+}
