@@ -1,6 +1,7 @@
 {
   "files.associations": {
     "adt_circularlinkedlist.h": "c",
-    "string.h": "c"
+    "string.h": "c",
+    "adt_priorityqueue.h": "c"
   }
 }

@@ -41,7 +41,7 @@ void __swap__(int *a, int *b)
  */
 ArrayList init(const int capacity)
 {
-    if (capacity < 0)
+    if (capacity <= 0)
     {
         perror("Invalid capacity for ArrayList");
         exit(EXIT_FAILURE);
