@@ -1,4 +1,4 @@
-# Priority Queue: An ADT for Prioritized Data in C
+# PriorityQueue: A Fixed-Capacity Priority Queue Abstract Data Type in C
 
 ## Overview
 
@@ -136,5 +136,5 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 
 - **Name:** Zulqarnain Chishti
 - **Email:** thisiszulqarnain@gmail.com
-- **LinkedIn:** [Zulqarnain Chishti](https://www.google.com/search?q=https://www.linkedin.com/in/zulqarnain-chishti-6731732a1/)
+- **LinkedIn:** [Zulqarnain Chishti](https://www.linkedin.com/in/zulqarnain-chishti-6731732a1/)
 - **GitHub:** [zulqarnainchishti](https://www.google.com/search?q=https://github.com/zulqarnainchishti)

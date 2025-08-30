@@ -1,4 +1,4 @@
-# Binary Heap: An ADT for Priority Queues in C
+# Heap: A Fixed-Capacity Binary Heap ADT for C
 
 ## Overview
 
