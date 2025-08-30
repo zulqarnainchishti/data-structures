@@ -41,12 +41,9 @@ void test_init_and_destroy()
     if (root->left != NULL || root->right != NULL)
         TEST_FAIL();
 
-    root = destroy(root);
-    printf("Test 1.4: Is root NULL after destroy?\n");
-    printf("Expected: NULL\n");
-    printf("Actual:   %s\n", (root == NULL) ? "NULL" : "Not NULL");
-    if (root != NULL)
-        TEST_FAIL();
+    destroy(root); // The function now returns void.
+    printf("Test 1.4: Tree destroyed. (Cannot check if root is NULL as destroy() is void).\n");
+    // No explicit check for root == NULL here, as the `root` pointer is passed by value and won't be modified.
 
     TEST_PASS();
 }
@@ -83,7 +80,7 @@ void test_insert()
     if (initial_size != final_size)
         TEST_FAIL();
 
-    root = destroy(root);
+    destroy(root);
     TEST_PASS();
 }
 
@@ -137,7 +134,7 @@ void test_search_and_relationships()
     if (sibling(root, 50) != NULL)
         TEST_FAIL();
 
-    root = destroy(root);
+    destroy(root);
     TEST_PASS();
 }
 
@@ -184,7 +181,7 @@ void test_discard()
     if (size(root) != initial_size)
         TEST_FAIL();
 
-    root = destroy(root);
+    destroy(root);
     TEST_PASS();
 }
 
@@ -242,7 +239,7 @@ void test_min_max_successor_predecessor()
     if (pred_20 != NULL)
         TEST_FAIL();
 
-    root = destroy(root);
+    destroy(root);
     TEST_PASS();
 }
 
@@ -282,7 +279,7 @@ void test_traversals()
     levelorder(root);
     printf("\n");
 
-    root = destroy(root);
+    destroy(root);
     TEST_PASS();
 }
 
@@ -346,7 +343,7 @@ void test_height_depth_size_degree_metrics()
     if (internal(root) != 3)
         TEST_FAIL();
 
-    root = destroy(root);
+    destroy(root);
     TEST_PASS();
 }
 

@@ -1,5 +1,5 @@
-#ifndef BST_H
-#define BST_H
+#ifndef BINARY_SEARCH_TREE_H
+#define BINARY_SEARCH_TREE_H
 
 #include <stdio.h>
 #include <math.h>
@@ -9,6 +9,9 @@
 /**
  * @struct BinarySearchTree
  * @brief Represents a node in the Binary Search Tree.
+ * @var data The integer value stored in the node.
+ * @var left Pointer to the left child.
+ * @var right Pointer to the right child.
  */
 typedef struct BinarySearchTree
 {
@@ -28,7 +31,10 @@ BinarySearchTree *init(const int value)
 {
     BinarySearchTree *node = (BinarySearchTree *)malloc(sizeof(BinarySearchTree));
     if (node == NULL)
-        return NULL;
+    {
+        perror("Failed to initialize Node.");
+        exit(EXIT_FAILURE);
+    }
     node->data = value;
     node->left = NULL;
     node->right = NULL;
@@ -40,14 +46,13 @@ BinarySearchTree *init(const int value)
  * @param root A pointer to the root of the tree.
  * @return Always NULL after destruction.
  */
-BinarySearchTree *destroy(BinarySearchTree *root)
+void destroy(BinarySearchTree *root)
 {
     if (root == NULL)
-        return NULL;
-    root->left = destroy(root->left);
-    root->right = destroy(root->right);
+        return;
+    destroy(root->left);
+    destroy(root->right);
     free(root);
-    return NULL;
 }
 
 /**
@@ -659,4 +664,4 @@ bool isBalanced(const BinarySearchTree *root, int *currHeight)
     return true;
 }
 
-#endif // BST_H
+#endif // BINARY_SEARCH_TREE_H

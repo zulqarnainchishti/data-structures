@@ -1,5 +1,5 @@
-#ifndef AVLTREE_H
-#define AVLTREE_H
+#ifndef AVL_TREE_H
+#define AVL_TREE_H
 
 #include <stdio.h>
 #include <math.h>
@@ -33,7 +33,10 @@ AVLTree *init(const int value)
 {
     AVLTree *node = (AVLTree *)malloc(sizeof(AVLTree));
     if (node == NULL)
-        return NULL;
+    {
+        perror("Failed to initialize Node.");
+        exit(EXIT_FAILURE);
+    }
     node->data = value;
     node->left = NULL;
     node->right = NULL;
@@ -46,14 +49,13 @@ AVLTree *init(const int value)
  * @param root A pointer to the root of the tree.
  * @return Always NULL after destruction.
  */
-AVLTree *destroy(AVLTree *root)
+void destroy(AVLTree *root)
 {
     if (root == NULL)
-        return NULL;
-    root->left = destroy(root->left);
-    root->right = destroy(root->right);
+        return;
+    destroy(root->left);
+    destroy(root->right);
     free(root);
-    return NULL;
 }
 
 /**
@@ -632,6 +634,7 @@ bool isComplete(AVLTree *root)
             queue[rear++] = curr->right;
         }
     }
+
     free(queue);
     return true;
 }
@@ -678,4 +681,4 @@ bool isSymmetric(AVLTree *root)
     return __mirror__(root->left, root->right);
 }
 
-#endif // AVLTREE_H
+#endif // AVL_TREE_H
