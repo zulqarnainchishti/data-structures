@@ -1,4 +1,4 @@
-# Binary Search Tree: An ADT for Hierarchical Data in C
+# BinarySearchTree: A Binary Search Tree ADT for C
 
 ## Overview
 

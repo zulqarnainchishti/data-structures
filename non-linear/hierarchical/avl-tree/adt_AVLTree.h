@@ -1,5 +1,5 @@
-#ifndef BST_H
-#define BST_H
+#ifndef AVLTREE_H
+#define AVLTREE_H
 
 #include <stdio.h>
 #include <math.h>
@@ -7,40 +7,46 @@
 #include <stdbool.h>
 
 /**
- * @struct BinarySearchTree
- * @brief Represents a node in the Binary Search Tree.
+ * @struct AVLTree
+ * @brief Represents a node in the AVL Tree.
+ * @var data The integer value stored in the node.
+ * @var left Pointer to the left child.
+ * @var right Pointer to the right child.
+ * @var height The height of the node's subtree.
  */
-typedef struct BinarySearchTree
+typedef struct AVLTree
 {
     int data;
-    struct BinarySearchTree *left;
-    struct BinarySearchTree *right;
-} BinarySearchTree;
+    struct AVLTree *left;
+    struct AVLTree *right;
+    int height;
+} AVLTree;
 
 // ------------------------- Core Operations -------------------------------
 
 /**
- * @brief Initializes a new BST node.
+ * @brief Initializes a new AVL tree node.
  * @param value The integer value to store in the new node.
  * @return A pointer to the newly created node, or NULL if memory allocation fails.
  */
-BinarySearchTree *init(const int value)
+AVLTree *init(const int value)
 {
-    BinarySearchTree *node = (BinarySearchTree *)malloc(sizeof(BinarySearchTree));
+    AVLTree *node = (AVLTree *)malloc(sizeof(AVLTree));
     if (node == NULL)
         return NULL;
     node->data = value;
     node->left = NULL;
     node->right = NULL;
+    node->height = 0;
     return node;
 }
 
 /**
- * @brief Destroys the entire BST and deallocates memory.
+ * @brief Destroys the entire AVL tree and deallocates memory.
  * @param root A pointer to the root of the tree.
  * @return Always NULL after destruction.
  */
-BinarySearchTree *destroy(BinarySearchTree *root)
+AVLTree *destroy(AVLTree *root)
 {
     if (root == NULL)
         return NULL;
@@ -51,27 +57,115 @@ BinarySearchTree *destroy(BinarySearchTree *root)
 }
 
 /**
- * @brief Creates a deep copy of a BST.
+ * @brief Creates a deep copy of an AVL tree.
  * @param root A pointer to the root of the tree to be copied.
  * @return A pointer to the root of the new, copied tree.
  */
-BinarySearchTree *copy(const BinarySearchTree *root)
+AVLTree *copy(const AVLTree *root)
 {
     if (root == NULL)
         return NULL;
-    BinarySearchTree *copied = init(root->data);
+    AVLTree *copied = init(root->data);
     copied->left = copy(root->left);
     copied->right = copy(root->right);
+    copied->height = root->height;
     return copied;
 }
 
 /**
- * @brief Inserts a new value into the BST.
+ * @brief Calculates the height of a node.
+ * @note This is a helper function to avoid direct access to the height member.
+ * @param root A pointer to the node.
+ * @return The height of the node's subtree. Returns -1 for a NULL node.
+ */
+int height(const AVLTree *root)
+{
+    if (root == NULL)
+        return -1;
+    return root->height;
+}
+
+/**
+ * @brief Calculates the balance factor of a node.
+ * @note A positive value indicates a left-heavy subtree, and a negative value indicates a right-heavy subtree.
+ * @param root A pointer to the node.
+ * @return The balance factor.
+ */
+int balance(const AVLTree *root)
+{
+    if (root == NULL)
+        return 0;
+    return height(root->left) - height(root->right);
+}
+
+/**
+ * @brief Performs a left rotation on a subtree rooted with x.
+ * @param x A pointer to the root of the subtree to be rotated.
+ * @return The new root of the rotated subtree.
+ */
+AVLTree *__leftRotate__(AVLTree *x)
+{
+    AVLTree *y = x->right;
+    x->right = y->left;
+    y->left = x;
+    x->height = 1 + ((height(x->left) > height(x->right)) ? height(x->left) : height(x->right));
+    y->height = 1 + ((height(y->left) > height(y->right)) ? height(y->left) : height(y->right));
+    return y;
+}
+
+/**
+ * @brief Performs a right rotation on a subtree rooted with x.
+ * @param x A pointer to the root of the subtree to be rotated.
+ * @return The new root of the rotated subtree.
+ */
+AVLTree *__rightRotate__(AVLTree *x)
+{
+    AVLTree *y = x->left;
+    x->left = y->right;
+    y->right = x;
+    x->height = 1 + ((height(x->left) > height(x->right)) ? height(x->left) : height(x->right));
+    y->height = 1 + ((height(y->left) > height(y->right)) ? height(y->left) : height(y->right));
+    return y;
+}
+
+/**
+ * @brief Rebalances the AVL tree after insertion or deletion.
+ * @param root A pointer to the root of the subtree to be rebalanced.
+ * @return The new root of the rebalanced subtree.
+ */
+AVLTree *__rebalance__(AVLTree *root)
+{
+    int balanceFactor = balance(root);
+    if (balanceFactor > 1) // Left Heavy
+    {
+        if (balance(root->left) >= 0)
+            return __rightRotate__(root); // Left Left Case
+        else
+        {
+            root->left = __leftRotate__(root->left);
+            return __rightRotate__(root); // Left Right Case
+        }
+    }
+    if (balanceFactor < -1) // Right Heavy
+    {
+        if (balance(root->right) <= 0)
+            return __leftRotate__(root); // Right Right Case
+        else
+        {
+            root->right = __rightRotate__(root->right);
+            return __leftRotate__(root); // Right Left Case
+        }
+    }
+    return root;
+}
+
+/**
+ * @brief Inserts a new value into the AVL tree.
  * @param root A pointer to the root of the tree.
  * @param value The value to insert.
  * @return A pointer to the root of the modified tree.
  */
-BinarySearchTree *insert(BinarySearchTree *root, const int value)
+AVLTree *insert(AVLTree *root, const int value)
 {
     if (root == NULL)
         return init(value);
@@ -79,16 +173,19 @@ BinarySearchTree *insert(BinarySearchTree *root, const int value)
         root->left = insert(root->left, value);
     else if (value > root->data)
         root->right = insert(root->right, value);
-    return root;
+    else
+        return root;
+    root->height = 1 + ((height(root->left) > height(root->right)) ? height(root->left) : height(root->right));
+    return __rebalance__(root);
 }
 
 /**
- * @brief Deletes a node with the specified value from the BST.
+ * @brief Deletes a node with the specified value from the AVL tree.
  * @param root A pointer to the root of the tree.
  * @param value The value of the node to be deleted.
  * @return A pointer to the root of the modified tree.
  */
-BinarySearchTree *discard(BinarySearchTree *root, const int value)
+AVLTree *discard(AVLTree *root, const int value)
 {
     if (root == NULL)
         return NULL;
@@ -105,20 +202,23 @@ BinarySearchTree *discard(BinarySearchTree *root, const int value)
         }
         else if (root->left == NULL || root->right == NULL)
         {
-            BinarySearchTree *temp = (root->left == NULL) ? root->right : root->left;
+            AVLTree *temp = (root->left == NULL) ? root->right : root->left;
             free(root);
             return temp;
         }
         else
         {
-            BinarySearchTree *succ = root->right;
+            AVLTree *succ = root->right;
             while (succ->left != NULL)
                 succ = succ->left;
             root->data = succ->data;
             root->right = discard(root->right, succ->data);
         }
     }
-    return root;
+    if (root == NULL)
+        return root; // Case where the root becomes NULL after deletion
+    root->height = 1 + ((height(root->left) > height(root->right)) ? height(root->left) : height(root->right));
+    return __rebalance__(root);
 }
 
 // ------------------------- Search Operations -----------------------------
@@ -129,7 +229,7 @@ BinarySearchTree *discard(BinarySearchTree *root, const int value)
  * @param value The value to search for.
  * @return A pointer to the found node, or NULL if not found.
  */
-BinarySearchTree *search(BinarySearchTree *root, const int value)
+AVLTree *search(AVLTree *root, const int value)
 {
     while (root != NULL)
     {
@@ -149,9 +249,9 @@ BinarySearchTree *search(BinarySearchTree *root, const int value)
  * @param value The value of the node whose parent is to be found.
  * @return A pointer to the parent node, or NULL if the node is the root or not found.
  */
-BinarySearchTree *parent(BinarySearchTree *root, const int value)
+AVLTree *parent(AVLTree *root, const int value)
 {
-    BinarySearchTree *prev = NULL;
+    AVLTree *prev = NULL;
     while (root != NULL)
     {
         if (value == root->data)
@@ -171,9 +271,9 @@ BinarySearchTree *parent(BinarySearchTree *root, const int value)
  * @param value The value of the node whose sibling is to be found.
  * @return A pointer to the sibling node, or NULL if the node is the root or has no sibling.
  */
-BinarySearchTree *sibling(BinarySearchTree *root, const int value)
+AVLTree *sibling(AVLTree *root, const int value)
 {
-    BinarySearchTree *prev = NULL;
+    AVLTree *prev = NULL;
     while (root != NULL)
     {
         if (value == root->data)
@@ -199,7 +299,7 @@ BinarySearchTree *sibling(BinarySearchTree *root, const int value)
  * @param root A pointer to the root of the tree.
  * @return A pointer to the minimum node, or NULL if the tree is empty.
  */
-BinarySearchTree *minimum(BinarySearchTree *root)
+AVLTree *minimum(AVLTree *root)
 {
     if (root == NULL)
         return NULL;
@@ -213,7 +313,7 @@ BinarySearchTree *minimum(BinarySearchTree *root)
  * @param root A pointer to the root of the tree.
  * @return A pointer to the maximum node, or NULL if the tree is empty.
  */
-BinarySearchTree *maximum(BinarySearchTree *root)
+AVLTree *maximum(AVLTree *root)
 {
     if (root == NULL)
         return NULL;
@@ -228,9 +328,9 @@ BinarySearchTree *maximum(BinarySearchTree *root)
  * @param value The value of the node whose successor is to be found.
  * @return A pointer to the successor node, or NULL if no successor exists.
  */
-BinarySearchTree *successor(BinarySearchTree *root, const int value)
+AVLTree *successor(AVLTree *root, const int value)
 {
-    BinarySearchTree *succ = NULL;
+    AVLTree *succ = NULL;
     while (root != NULL)
     {
         if (value == root->data)
@@ -257,9 +357,9 @@ BinarySearchTree *successor(BinarySearchTree *root, const int value)
  * @param value The value of the node whose predecessor is to be found.
  * @return A pointer to the predecessor node, or NULL if no predecessor exists.
  */
-BinarySearchTree *predecessor(BinarySearchTree *root, const int value)
+AVLTree *predecessor(AVLTree *root, const int value)
 {
-    BinarySearchTree *pred = NULL;
+    AVLTree *pred = NULL;
     while (root != NULL)
     {
         if (value == root->data)
@@ -286,9 +386,9 @@ BinarySearchTree *predecessor(BinarySearchTree *root, const int value)
  * @param value The value to find the ceiling for.
  * @return A pointer to the ceiling node, or NULL if no such value exists.
  */
-BinarySearchTree *ceiling(BinarySearchTree *root, const double value)
+AVLTree *ceiling(AVLTree *root, const double value)
 {
-    BinarySearchTree *next = NULL;
+    AVLTree *next = NULL;
     while (root != NULL)
     {
         if (value == root->data)
@@ -310,9 +410,9 @@ BinarySearchTree *ceiling(BinarySearchTree *root, const double value)
  * @param value The value to find the floor for.
  * @return A pointer to the floor node, or NULL if no such value exists.
  */
-BinarySearchTree *floored(BinarySearchTree *root, const double value)
+AVLTree *floored(AVLTree *root, const double value)
 {
-    BinarySearchTree *prev = NULL;
+    AVLTree *prev = NULL;
     while (root != NULL)
     {
         if (value == root->data)
@@ -335,7 +435,7 @@ BinarySearchTree *floored(BinarySearchTree *root, const double value)
  * @param root A pointer to the node.
  * @return The number of children (0, 1, or 2).
  */
-int degree(const BinarySearchTree *root)
+int degree(const AVLTree *root)
 {
     if (root == NULL)
         return 0;
@@ -347,7 +447,7 @@ int degree(const BinarySearchTree *root)
  * @param root A pointer to the root of the tree.
  * @return The total number of nodes.
  */
-int size(const BinarySearchTree *root)
+int size(const AVLTree *root)
 {
     if (root == NULL)
         return 0;
@@ -359,7 +459,7 @@ int size(const BinarySearchTree *root)
  * @param root A pointer to the root of the tree.
  * @return The number of external nodes.
  */
-int external(const BinarySearchTree *root)
+int external(const AVLTree *root)
 {
     if (root == NULL)
         return 0;
@@ -373,7 +473,7 @@ int external(const BinarySearchTree *root)
  * @param root A pointer to the root of the tree.
  * @return The number of internal nodes.
  */
-int internal(const BinarySearchTree *root)
+int internal(const AVLTree *root)
 {
     if (root == NULL)
         return 0;
@@ -383,26 +483,12 @@ int internal(const BinarySearchTree *root)
 }
 
 /**
- * @brief Calculates the height of the tree.
- * @param root A pointer to the root of the tree.
- * @return The height of the tree. Returns -1 for an empty tree.
- */
-int height(const BinarySearchTree *root)
-{
-    if (root == NULL)
-        return -1;
-    int leftHeight = height(root->left);
-    int rightHeight = height(root->right);
-    return 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
-}
-
-/**
  * @brief Calculates the depth of a node.
  * @param root A pointer to the root of the tree.
  * @param value The value of the node whose depth is to be found.
  * @return The depth of the node. Returns -1 if the node is not found.
  */
-int depth(const BinarySearchTree *root, const int value)
+int depth(const AVLTree *root, int value)
 {
     int level = 0;
     while (root != NULL)
@@ -424,7 +510,7 @@ int depth(const BinarySearchTree *root, const int value)
  * @brief Prints the tree nodes in pre-order traversal (Root -> Left -> Right).
  * @param root A pointer to the root of the tree.
  */
-void preorder(const BinarySearchTree *root)
+void preorder(const AVLTree *root)
 {
     if (root == NULL)
         return;
@@ -437,7 +523,7 @@ void preorder(const BinarySearchTree *root)
  * @brief Prints the tree nodes in in-order traversal (Left -> Root -> Right).
  * @param root A pointer to the root of the tree.
  */
-void inorder(const BinarySearchTree *root)
+void inorder(const AVLTree *root)
 {
     if (root == NULL)
         return;
@@ -450,7 +536,7 @@ void inorder(const BinarySearchTree *root)
  * @brief Prints the tree nodes in post-order traversal (Left -> Right -> Root).
  * @param root A pointer to the root of the tree.
  */
-void postorder(const BinarySearchTree *root)
+void postorder(const AVLTree *root)
 {
     if (root == NULL)
         return;
@@ -463,11 +549,11 @@ void postorder(const BinarySearchTree *root)
  * @brief Prints the tree nodes in level-order traversal (Breadth-First Search).
  * @param root A pointer to the root of the tree.
  */
-void levelorder(BinarySearchTree *root)
+void levelorder(AVLTree *root)
 {
     if (root == NULL)
         return;
-    BinarySearchTree **queue = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+    AVLTree **queue = (AVLTree **)malloc(size(root) * sizeof(AVLTree *));
     if (queue == NULL)
         return;
     int front = 0, rear = 0;
@@ -481,6 +567,7 @@ void levelorder(BinarySearchTree *root)
             queue[rear++] = root->right;
         printf("<%d> ", root->data);
     }
+    free(queue);
 }
 
 // ------------------------- Type Checks ------------------------------
@@ -490,7 +577,7 @@ void levelorder(BinarySearchTree *root)
  * @param root A pointer to the root of the tree.
  * @return true if the tree is perfect, false otherwise.
  */
-bool isPerfect(const BinarySearchTree *root)
+bool isPerfect(const AVLTree *root)
 {
     if (root == NULL)
         return true;
@@ -504,12 +591,12 @@ bool isPerfect(const BinarySearchTree *root)
  * @param root A pointer to the root of the tree.
  * @return true if the tree is complete, false otherwise.
  */
-bool isComplete(BinarySearchTree *root)
+bool isComplete(AVLTree *root)
 {
     if (root == NULL)
         return true;
 
-    BinarySearchTree **queue = (BinarySearchTree **)malloc(size(root) * sizeof(BinarySearchTree *));
+    AVLTree **queue = (AVLTree **)malloc(size(root) * sizeof(AVLTree *));
     if (queue == NULL)
         return false;
 
@@ -519,7 +606,7 @@ bool isComplete(BinarySearchTree *root)
 
     while (front < rear)
     {
-        BinarySearchTree *curr = queue[front++];
+        AVLTree *curr = queue[front++];
 
         if (curr->left == NULL)
             nullFound = true;
@@ -545,7 +632,6 @@ bool isComplete(BinarySearchTree *root)
             queue[rear++] = curr->right;
         }
     }
-
     free(queue);
     return true;
 }
@@ -555,7 +641,7 @@ bool isComplete(BinarySearchTree *root)
  * @param root A pointer to the root of the tree.
  * @return true if the tree is full, false otherwise.
  */
-bool isFull(const BinarySearchTree *root)
+bool isFull(const AVLTree *root)
 {
     if (root == NULL)
         return true;
@@ -565,56 +651,12 @@ bool isFull(const BinarySearchTree *root)
 }
 
 /**
- * @brief Checks if the tree is a degenerate binary tree.
- * @param root A pointer to the root of the tree.
- * @return true if the tree is degenerate, false otherwise.
- */
-bool isDegenerate(const BinarySearchTree *root)
-{
-    if (root == NULL)
-        return true;
-    if (root->left != NULL && root->right != NULL)
-        return false;
-    return (isDegenerate(root->left) && isDegenerate(root->right));
-}
-
-/**
- * @brief Checks if the tree is a skewed binary tree.
- * @param root A pointer to the root of the tree.
- * @return true if the tree is skewed, false otherwise.
- */
-bool isSkewed(const BinarySearchTree *root)
-{
-    if (root == NULL)
-        return true;
-    if (root->left != NULL)
-    {
-        while (root != NULL)
-        {
-            if (root->right != NULL)
-                return false;
-            root = root->left;
-        }
-    }
-    else
-    {
-        while (root != NULL)
-        {
-            if (root->left != NULL)
-                return false;
-            root = root->right;
-        }
-    }
-    return true;
-}
-
-/**
  * @brief Helper function to check if two trees are mirror images of each other.
  * @param root1 A pointer to the root of the first tree.
  * @param root2 A pointer to the root of the second tree.
  * @return true if they are mirrors, false otherwise.
  */
-bool __mirror__(const BinarySearchTree *root1, const BinarySearchTree *root2)
+bool __mirror__(AVLTree *root1, AVLTree *root2)
 {
     if (root1 == NULL && root2 == NULL)
         return true;
@@ -629,34 +671,11 @@ bool __mirror__(const BinarySearchTree *root1, const BinarySearchTree *root2)
  * @param root A pointer to the root of the tree.
  * @return true if the tree is symmetric, false otherwise.
  */
-bool isSymmetric(const BinarySearchTree *root)
+bool isSymmetric(AVLTree *root)
 {
     if (root == NULL)
         return true;
     return __mirror__(root->left, root->right);
 }
 
-/**
- * @brief Checks if the tree is balanced.
- * @param root A pointer to the root of the tree.
- * @param currHeight A pointer to an integer to store the height of the current subtree.
- * @return true if the tree is balanced, false otherwise.
- */
-bool isBalanced(const BinarySearchTree *root, int *currHeight)
-{
-    if (root == NULL)
-    {
-        *currHeight = -1;
-        return true;
-    }
-    int leftHeight, rightHeight;
-    if (!isBalanced(root->left, &leftHeight) || !isBalanced(root->right, &rightHeight))
-        return false;
-    int balanceFactor = leftHeight - rightHeight;
-    if (abs(balanceFactor) > 1)
-        return false;
-    *currHeight = 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
-    return true;
-}
-
-#endif // BST_H
+#endif // AVLTREE_H
